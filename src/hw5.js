@@ -167,6 +167,8 @@ function createThreePointArc(scene, centerX, radius, baselineOffset, yOffset, ma
 ///***********ldsfjsljf */
 // Add basketball hoops to the court
 // Add basketball hoops to the court
+// Add basketball hoops to the court
+// Add basketball hoops to the court
 function addBasketballHoops(scene) {
   // Create hoops at both ends of the court
   createSingleHoop(scene, 13, 0, Math.PI); // Right hoop (facing left)
@@ -182,29 +184,30 @@ function createSingleHoop(scene, x, z, rotationY) {
   const poleMaterial = new THREE.MeshPhongMaterial({ color: 0x666666 });
   const pole = new THREE.Mesh(poleGeometry, poleMaterial);
   
-  // Position pole behind backboard
-  const poleOffsetX = rotationY === 0 ? -1.5 : 1.5;
+  // Position pole BEHIND backboard (further away from court center)
+  const poleOffsetX = rotationY === 0 ? -2.0 : 2.0; // Further behind backboard
   pole.position.set(x + poleOffsetX, 5, z);
   pole.castShadow = true;
   hoopGroup.add(pole);
   
   // Support arm connecting pole to backboard
-  const armGeometry = new THREE.BoxGeometry(1.5, 0.2, 0.3); // Shorter arm
+  const armGeometry = new THREE.BoxGeometry(2.0, 0.2, 0.3); // Longer arm to reach backboard
   const arm = new THREE.Mesh(armGeometry, poleMaterial);
-  // Position arm so it ends exactly at the backboard
-  const armOffsetX = rotationY === 0 ? -1.125 : 1.125; // Positioned to end at backboard
+  // Position arm to connect pole to backboard
+  const armOffsetX = rotationY === 0 ? -1.0 : 1.0; // Centered between pole and backboard
   arm.position.set(x + armOffsetX, 9.5, z);
   arm.castShadow = true;
   hoopGroup.add(arm);
   
-  // Backboard
+  // Backboard - whiter and more visible
   const backboardGeometry = new THREE.BoxGeometry(0.15, 3.5, 6);
   const backboardMaterial = new THREE.MeshPhongMaterial({ 
-    color: 0xffffff, 
+    color: 0xffffff,      // Pure white
     transparent: true, 
-    opacity: 0.95,
-    shininess: 80,
-    side: THREE.DoubleSide
+    opacity: 0.85,         // Less transparent (more visible white)
+    shininess: 120,       // Higher shininess for brighter appearance
+    side: THREE.DoubleSide,
+    emissive: 0x111111    // Slight emission for brighter white
   });
   const backboard = new THREE.Mesh(backboardGeometry, backboardMaterial);
   backboard.position.set(x, 9.5, z);
@@ -290,7 +293,6 @@ function createNet(x, y, z, parent) {
     }
   }
 }
-
 
 ///////////////******************************* */
 
