@@ -166,6 +166,7 @@ function createThreePointArc(scene, centerX, radius, baselineOffset, yOffset, ma
 
 ///***********ldsfjsljf */
 // Add basketball hoops to the court
+// Add basketball hoops to the court
 function addBasketballHoops(scene) {
   // Create hoops at both ends of the court
   createSingleHoop(scene, 13, 0, Math.PI); // Right hoop (facing left)
@@ -233,29 +234,60 @@ function createSingleHoop(scene, x, z, rotationY) {
 // Create basketball net using line segments
 function createNet(x, y, z, parent) {
   const netMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
-  const netSegments = 8;
+  const netSegments = 12;
   const rimRadius = 0.75;
   const netLength = 1.5;
+  const netLevels = 6; // Number of horizontal levels in the net
   
+  // Create vertical segments from rim
+  const verticalPoints = [];
   for (let i = 0; i < netSegments; i++) {
     const angle = (i / netSegments) * Math.PI * 2;
     const startX = Math.cos(angle) * rimRadius;
     const startZ = Math.sin(angle) * rimRadius;
     
-    // Create curved net segment
     const points = [];
-    for (let j = 0; j <= 8; j++) {
-      const t = j / 8;
-      const curveFactor = Math.sin(t * Math.PI) * 0.3; // Creates a curved droop
-      const segX = startX * (1 - t * 0.2); // Slight inward curve
+    for (let j = 0; j <= netLevels; j++) {
+      const t = j / netLevels;
+      const curveFactor = Math.sin(t * Math.PI) * 0.4; // Creates a curved droop
+      const segX = startX * (1 - t * 0.3); // Inward curve
       const segY = -t * netLength - curveFactor;
-      const segZ = startZ * (1 - t * 0.2);
-      points.push(new THREE.Vector3(x + segX, y + segY, z + segZ));
+      const segZ = startZ * (1 - t * 0.3);
+      const point = new THREE.Vector3(x + segX, y + segY, z + segZ);
+      points.push(point);
+      
+      // Store points for horizontal connections
+      if (!verticalPoints[j]) verticalPoints[j] = [];
+      verticalPoints[j].push(point);
     }
     
+    // Create vertical line segment
     const segmentGeometry = new THREE.BufferGeometry().setFromPoints(points);
     const netSegment = new THREE.Line(segmentGeometry, netMaterial);
     parent.add(netSegment);
+  }
+  
+  // Create horizontal connecting segments (every other level for realistic look)
+  for (let level = 1; level < netLevels; level += 1) {
+    if (verticalPoints[level]) {
+      for (let i = 0; i < verticalPoints[level].length; i++) {
+        const currentPoint = verticalPoints[level][i];
+        const nextPoint = verticalPoints[level][(i + 1) % verticalPoints[level].length];
+        
+        // Create horizontal connecting line
+        const horizontalGeometry = new THREE.BufferGeometry().setFromPoints([currentPoint, nextPoint]);
+        const horizontalSegment = new THREE.Line(horizontalGeometry, netMaterial);
+        parent.add(horizontalSegment);
+        
+        // Add diagonal connections for more realistic net pattern (every other segment)
+        if (level < netLevels - 1 && i % 2 === 0) {
+          const diagonalPoint = verticalPoints[level + 1][(i + 1) % verticalPoints[level + 1].length];
+          const diagonalGeometry = new THREE.BufferGeometry().setFromPoints([currentPoint, diagonalPoint]);
+          const diagonalSegment = new THREE.Line(diagonalGeometry, netMaterial);
+          parent.add(diagonalSegment);
+        }
+      }
+    }
   }
 }
 
