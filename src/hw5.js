@@ -107,10 +107,170 @@ function addCourtMarkings(scene) {
 }
 
 
+//////////////////////////////
+
+// Add three-point lines to the court
+function addThreePointLines(scene) {
+  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+  const yOffset = 0.11;
+  
+  // Three-point line parameters
+  const centerDistance = 12; // Distance from center to basket
+  const radius = 6.75; // Three-point arc radius
+  const baselineOffset = 7.25; // Court half-width (baseline position)
+  
+  // Create left three-point line (basket at x = -12)
+  createThreePointArc(scene, -centerDistance, radius, baselineOffset, yOffset, lineMaterial, false);
+  
+  // Create right three-point line (basket at x = 12)  
+  createThreePointArc(scene, centerDistance, radius, baselineOffset, yOffset, lineMaterial, true);
+}
+
+function createThreePointArc(scene, centerX, radius, baselineOffset, yOffset, material, isRightSide) {
+  const points = [];
+  const segments = 64; // Higher resolution for smoother arc
+  
+  // Create the curved arc from -90° to +90°, but limit to baseline
+  for (let i = 0; i <= segments; i++) {
+    let angle = (i / segments) * Math.PI - Math.PI/2; // -90° to +90°
+    
+    // For right side, flip the arc direction
+    if (isRightSide) {
+      angle = Math.PI - angle;
+    }
+    
+    const x = centerX + Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    
+    // Only add points that are within the court baseline bounds
+    if (Math.abs(z) <= baselineOffset) {
+      points.push(new THREE.Vector3(x, yOffset, z));
+    }
+  }
+  
+  // Create the line geometry
+  const threePointGeometry = new THREE.BufferGeometry();
+  const positions = [];
+  
+  for (let point of points) {
+    positions.push(point.x, point.y, point.z);
+  }
+  
+  threePointGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+  
+  // Add the line to the scene
+  const threePointLine = new THREE.Line(threePointGeometry, material);
+  scene.add(threePointLine);
+}
+
+
+///***********ldsfjsljf */
+// Add basketball hoops to the court
+function addBasketballHoops(scene) {
+  // Create hoops at both ends of the court
+  createSingleHoop(scene, 13, 0, Math.PI); // Right hoop (facing left)
+  createSingleHoop(scene, -13, 0, 0);      // Left hoop (facing right)
+}
+
+// Create a single basketball hoop with all components
+function createSingleHoop(scene, x, z, rotationY) {
+  const hoopGroup = new THREE.Group();
+  
+  // Support pole (positioned behind backboard)
+  const poleGeometry = new THREE.CylinderGeometry(0.15, 0.15, 10);
+  const poleMaterial = new THREE.MeshPhongMaterial({ color: 0x666666 });
+  const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+  
+  // Position pole behind backboard
+  const poleOffsetX = rotationY === 0 ? -1.5 : 1.5;
+  pole.position.set(x + poleOffsetX, 5, z);
+  pole.castShadow = true;
+  hoopGroup.add(pole);
+  
+  // Support arm connecting pole to backboard
+  const armGeometry = new THREE.BoxGeometry(1.5, 0.2, 0.3); // Shorter arm
+  const arm = new THREE.Mesh(armGeometry, poleMaterial);
+  // Position arm so it ends exactly at the backboard
+  const armOffsetX = rotationY === 0 ? -1.125 : 1.125; // Positioned to end at backboard
+  arm.position.set(x + armOffsetX, 9.5, z);
+  arm.castShadow = true;
+  hoopGroup.add(arm);
+  
+  // Backboard
+  const backboardGeometry = new THREE.BoxGeometry(0.15, 3.5, 6);
+  const backboardMaterial = new THREE.MeshPhongMaterial({ 
+    color: 0xffffff, 
+    transparent: true, 
+    opacity: 0.95,
+    shininess: 80,
+    side: THREE.DoubleSide
+  });
+  const backboard = new THREE.Mesh(backboardGeometry, backboardMaterial);
+  backboard.position.set(x, 9.5, z);
+  backboard.rotation.y = rotationY;
+  backboard.castShadow = true;
+  backboard.receiveShadow = true;
+  hoopGroup.add(backboard);
+  
+  // Rim
+  const rimGeometry = new THREE.TorusGeometry(0.75, 0.05, 8, 32);
+  const rimMaterial = new THREE.MeshPhongMaterial({ color: 0xff6600 }); // Orange
+  const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+  
+  // Position rim in front of backboard at regulation height
+  const rimOffsetX = rotationY === 0 ? 0.6 : -0.6;
+  rim.position.set(x + rimOffsetX, 7.5, z); // 7.5 units = ~10 feet
+  rim.rotation.x = degrees_to_radians(90);
+  rim.castShadow = true;
+  hoopGroup.add(rim);
+  
+  // Create net using line segments
+  createNet(x + rimOffsetX, 7.5, z, hoopGroup);
+  
+  scene.add(hoopGroup);
+}
+
+// Create basketball net using line segments
+function createNet(x, y, z, parent) {
+  const netMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+  const netSegments = 8;
+  const rimRadius = 0.75;
+  const netLength = 1.5;
+  
+  for (let i = 0; i < netSegments; i++) {
+    const angle = (i / netSegments) * Math.PI * 2;
+    const startX = Math.cos(angle) * rimRadius;
+    const startZ = Math.sin(angle) * rimRadius;
+    
+    // Create curved net segment
+    const points = [];
+    for (let j = 0; j <= 8; j++) {
+      const t = j / 8;
+      const curveFactor = Math.sin(t * Math.PI) * 0.3; // Creates a curved droop
+      const segX = startX * (1 - t * 0.2); // Slight inward curve
+      const segY = -t * netLength - curveFactor;
+      const segZ = startZ * (1 - t * 0.2);
+      points.push(new THREE.Vector3(x + segX, y + segY, z + segZ));
+    }
+    
+    const segmentGeometry = new THREE.BufferGeometry().setFromPoints(points);
+    const netSegment = new THREE.Line(segmentGeometry, netMaterial);
+    parent.add(netSegment);
+  }
+}
+
+
+///////////////******************************* */
 
 // Create all elements
 createBasketballCourt();
 addCourtMarkings(scene);
+
+addThreePointLines(scene);  // Add this line
+
+addBasketballHoops(scene);  // Add this line
+
+
 
 
 
@@ -160,5 +320,19 @@ function animate() {
 
 animate();
 
+
+
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
+//////////////////////////////////
 
 
