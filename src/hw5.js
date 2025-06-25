@@ -26,6 +26,7 @@ function degrees_to_radians(degrees) {
   return degrees * (pi/180);
 }
 
+
 // Create basketball court
 function createBasketballCourt() {
   // Court floor - just a simple brown surface
@@ -42,8 +43,61 @@ function createBasketballCourt() {
   // Students will need to implement these features
 }
 
+
+
+// ****************************************************************************************
+function addCourtMarkings(scene) {
+  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff }); // White lines
+  const lineThickness = 0.03;
+
+  // 1️⃣ Center Line
+  const centerLineGeometry = new THREE.BufferGeometry();
+  const centerLineVertices = new Float32Array([
+    -15, 0.1, 0,
+     15, 0.1, 0
+  ]);
+  centerLineGeometry.setAttribute('position', new THREE.BufferAttribute(centerLineVertices, 3));
+  const centerLine = new THREE.Line(centerLineGeometry, lineMaterial);
+  scene.add(centerLine);
+
+  // 2️⃣ Center Circle
+  const centerCircleGeometry = new THREE.CircleGeometry(1.8, 64);
+  const centerCircleEdges = new THREE.EdgesGeometry(centerCircleGeometry);
+  const centerCircleLine = new THREE.LineSegments(centerCircleEdges, lineMaterial);
+  centerCircleLine.rotation.x = -Math.PI / 2;
+  centerCircleLine.position.y = 0.1;
+  scene.add(centerCircleLine);
+
+  // 3️⃣ Three-Point Arcs
+  const threePointRadius = 6.75;
+
+  function createThreePointArc(xPosition) {
+    const arcCurve = new THREE.EllipseCurve(
+      0, 0,
+      threePointRadius,
+      threePointRadius,
+      Math.PI / 2,
+      -Math.PI / 2,
+      xPosition > 0
+    );
+    const points = arcCurve.getPoints(64);
+    const arcGeometry = new THREE.BufferGeometry().setFromPoints(
+      points.map(p => new THREE.Vector3(p.x, 0.1, p.y))
+    );
+    const arc = new THREE.Line(arcGeometry, lineMaterial);
+    arc.position.x = xPosition;
+    scene.add(arc);
+  }
+
+  createThreePointArc(-14);
+  createThreePointArc(14);
+}
+// ********************************************************************************
+
 // Create all elements
 createBasketballCourt();
+addCourtMarkings(scene);
+
 
 // Set camera position for better view
 const cameraTranslate = new THREE.Matrix4();
