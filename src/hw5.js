@@ -45,58 +45,73 @@ function createBasketballCourt() {
 
 
 
-// ****************************************************************************************
+// // ****************************************************************************************
+
+// ********************************************************************************
+
+//////////////////////////////////////////////////////////////
 function addCourtMarkings(scene) {
-  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff }); // White lines
-  const lineThickness = 0.03;
+  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff }); 
 
-  // 1️⃣ Center Line
+  const sidelineOffset = 14.5;   // Court half-length
+  const baselineOffset = 7.25;   // Court half-width
+  const yOffset = 0.11;
+
+  // Left Sideline
+  const leftSidelineGeometry = new THREE.BufferGeometry();
+  leftSidelineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    -sidelineOffset, yOffset, -baselineOffset,
+    -sidelineOffset, yOffset,  baselineOffset,
+  ]), 3));
+  scene.add(new THREE.Line(leftSidelineGeometry, lineMaterial));
+
+  // Right Sideline
+  const rightSidelineGeometry = new THREE.BufferGeometry();
+  rightSidelineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    sidelineOffset, yOffset, -baselineOffset,
+    sidelineOffset, yOffset,  baselineOffset,
+  ]), 3));
+  scene.add(new THREE.Line(rightSidelineGeometry, lineMaterial));
+
+  // Near Baseline
+  const nearBaselineGeometry = new THREE.BufferGeometry();
+  nearBaselineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    -sidelineOffset, yOffset, -baselineOffset,
+    sidelineOffset, yOffset, -baselineOffset,
+  ]), 3));
+  scene.add(new THREE.Line(nearBaselineGeometry, lineMaterial));
+
+  // Far Baseline
+  const farBaselineGeometry = new THREE.BufferGeometry();
+  farBaselineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    -sidelineOffset, yOffset, baselineOffset,
+    sidelineOffset, yOffset, baselineOffset,
+  ]), 3));
+  scene.add(new THREE.Line(farBaselineGeometry, lineMaterial));
+
+  // Center Line
   const centerLineGeometry = new THREE.BufferGeometry();
-  const centerLineVertices = new Float32Array([
-    -15, 0.1, 0,
-     15, 0.1, 0
-  ]);
-  centerLineGeometry.setAttribute('position', new THREE.BufferAttribute(centerLineVertices, 3));
-  const centerLine = new THREE.Line(centerLineGeometry, lineMaterial);
-  scene.add(centerLine);
+  centerLineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    0, yOffset, -baselineOffset,
+    0, yOffset, baselineOffset
+  ]), 3));
+  scene.add(new THREE.Line(centerLineGeometry, lineMaterial));
 
-  // 2️⃣ Center Circle
+  // Center Circle
   const centerCircleGeometry = new THREE.CircleGeometry(1.8, 64);
   const centerCircleEdges = new THREE.EdgesGeometry(centerCircleGeometry);
   const centerCircleLine = new THREE.LineSegments(centerCircleEdges, lineMaterial);
   centerCircleLine.rotation.x = -Math.PI / 2;
-  centerCircleLine.position.y = 0.1;
+  centerCircleLine.position.y = yOffset;
   scene.add(centerCircleLine);
-
-  // 3️⃣ Three-Point Arcs
-  const threePointRadius = 6.75;
-
-  function createThreePointArc(xPosition) {
-    const arcCurve = new THREE.EllipseCurve(
-      0, 0,
-      threePointRadius,
-      threePointRadius,
-      Math.PI / 2,
-      -Math.PI / 2,
-      xPosition > 0
-    );
-    const points = arcCurve.getPoints(64);
-    const arcGeometry = new THREE.BufferGeometry().setFromPoints(
-      points.map(p => new THREE.Vector3(p.x, 0.1, p.y))
-    );
-    const arc = new THREE.Line(arcGeometry, lineMaterial);
-    arc.position.x = xPosition;
-    scene.add(arc);
-  }
-
-  createThreePointArc(-14);
-  createThreePointArc(14);
 }
-// ********************************************************************************
+
+
 
 // Create all elements
 createBasketballCourt();
 addCourtMarkings(scene);
+
 
 
 // Set camera position for better view
@@ -144,3 +159,6 @@ function animate() {
 }
 
 animate();
+
+
+
