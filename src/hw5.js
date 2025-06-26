@@ -366,70 +366,119 @@ function createNet(x, y, z, parent) {
 // Add static basketball at center court
 // Add static basketball at center court
 // Create basketball seam lines
+// function addStaticBasketball(scene) {
+//   // Basketball sphere
+//   const ballGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+//   const ballMaterial = new THREE.MeshPhongMaterial({ 
+//     color: 0xff6600,    // Orange color
+//     shininess: 30,      // Realistic basketball surface
+//     specular: 0x222222  // Subtle shine
+//   });
+//   const basketball = new THREE.Mesh(ballGeometry, ballMaterial);
+//   basketball.position.set(0, 0.7, 0); // At center court, resting on ground
+//   basketball.castShadow = true;
+//   scene.add(basketball);
+  
+//   // Basketball seams (black lines)
+//   createBasketballSeams(basketball);
+// }
+
+// // Create basketball seam lines
+// // Create basketball seam lines
+// // Create basketball seam lines
+// // Create basketball seam lines
+// // Create basketball seam lines
+// function createBasketballSeams(ball) {
+//   const seamMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 3 });
+//   const radius = 0.605; // Slightly larger than ball radius to sit on surface
+  
+//   // Classic basketball pattern: 2 curved lines that intersect to form 4 panels
+  
+//   // First curved line - creates a smooth curve around the ball
+//   const curve1Points = [];
+//   for (let i = 0; i <= 64; i++) {
+//     const t = (i / 64) * Math.PI * 2; // 0 to 2π
+    
+//     // Simple sinusoidal curve around the equator
+//     const x = radius * Math.cos(t);
+//     const y = radius * Math.sin(t * 2) * 0.6; // Creates the curve
+//     const z = radius * Math.sin(t);
+    
+//     curve1Points.push(new THREE.Vector3(x, y, z));
+//   }
+  
+//   const curve1Geometry = new THREE.BufferGeometry().setFromPoints(curve1Points);
+//   const curve1 = new THREE.Line(curve1Geometry, seamMaterial);
+//   ball.add(curve1);
+  
+//   // Second curved line - perpendicular to the first
+//   const curve2Points = [];
+//   for (let i = 0; i <= 64; i++) {
+//     const t = (i / 64) * Math.PI * 2; // 0 to 2π
+    
+//     // Perpendicular curve
+//     const x = radius * Math.sin(t * 2) * 0.6;
+//     const y = radius * Math.cos(t);
+//     const z = radius * Math.sin(t);
+    
+//     curve2Points.push(new THREE.Vector3(x, y, z));
+//   }
+  
+//   const curve2Geometry = new THREE.BufferGeometry().setFromPoints(curve2Points);
+//   const curve2 = new THREE.Line(curve2Geometry, seamMaterial);
+//   ball.add(curve2);
+// }
+///////////////////////////***************************** */
+
 function addStaticBasketball(scene) {
   // Basketball sphere
   const ballGeometry = new THREE.SphereGeometry(0.6, 32, 32);
   const ballMaterial = new THREE.MeshPhongMaterial({ 
-    color: 0xff6600,    // Orange color
-    shininess: 30,      // Realistic basketball surface
-    specular: 0x222222  // Subtle shine
+    color: 0xff6600,
+    shininess: 30,
+    specular: 0x222222
   });
   const basketball = new THREE.Mesh(ballGeometry, ballMaterial);
-  basketball.position.set(0, 0.7, 0); // At center court, resting on ground
+  basketball.position.set(0, 0.6, 0);
   basketball.castShadow = true;
+
+  // Add the basketball to the scene
   scene.add(basketball);
-  
-  // Basketball seams (black lines)
+
+  // Add the seams
   createBasketballSeams(basketball);
 }
 
-// Create basketball seam lines
-// Create basketball seam lines
-// Create basketball seam lines
-// Create basketball seam lines
-// Create basketball seam lines
-function createBasketballSeams(ball) {
-  const seamMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 3 });
-  const radius = 0.605; // Slightly larger than ball radius to sit on surface
-  
-  // Classic basketball pattern: 2 curved lines that intersect to form 4 panels
-  
-  // First curved line - creates a smooth curve around the ball
-  const curve1Points = [];
-  for (let i = 0; i <= 64; i++) {
-    const t = (i / 64) * Math.PI * 2; // 0 to 2π
-    
-    // Simple sinusoidal curve around the equator
-    const x = radius * Math.cos(t);
-    const y = radius * Math.sin(t * 2) * 0.6; // Creates the curve
-    const z = radius * Math.sin(t);
-    
-    curve1Points.push(new THREE.Vector3(x, y, z));
-  }
-  
-  const curve1Geometry = new THREE.BufferGeometry().setFromPoints(curve1Points);
-  const curve1 = new THREE.Line(curve1Geometry, seamMaterial);
-  ball.add(curve1);
-  
-  // Second curved line - perpendicular to the first
-  const curve2Points = [];
-  for (let i = 0; i <= 64; i++) {
-    const t = (i / 64) * Math.PI * 2; // 0 to 2π
-    
-    // Perpendicular curve
-    const x = radius * Math.sin(t * 2) * 0.6;
-    const y = radius * Math.cos(t);
-    const z = radius * Math.sin(t);
-    
-    curve2Points.push(new THREE.Vector3(x, y, z));
-  }
-  
-  const curve2Geometry = new THREE.BufferGeometry().setFromPoints(curve2Points);
-  const curve2 = new THREE.Line(curve2Geometry, seamMaterial);
-  ball.add(curve2);
-}
-///////////////////////////***************************** */
+function createBasketballSeams(basketball) {
+  const seamMaterial = new THREE.LineBasicMaterial({ color: 0x000000 }); 
+  const radius = 0.6;
 
+  // 1️⃣ Vertical seam (around X axis)
+  const verticalSeamGeometry = new THREE.TorusGeometry(radius, 0.01, 16, 100);
+  const verticalSeam = new THREE.Mesh(verticalSeamGeometry, seamMaterial);
+  verticalSeam.rotation.y = Math.PI / 2;
+  basketball.add(verticalSeam);
+
+  // 2️⃣ Horizontal seam (around Z axis)
+  const horizontalSeamGeometry = new THREE.TorusGeometry(radius, 0.01, 16, 100);
+  const horizontalSeam = new THREE.Mesh(horizontalSeamGeometry, seamMaterial);
+  horizontalSeam.rotation.x = Math.PI / 2;
+  basketball.add(horizontalSeam);
+
+  // 3️⃣ Angled seam #1 (~45°)
+  const angledSeam1 = new THREE.TorusGeometry(radius, 0.01, 16, 100);
+  const angledSeam1Mesh = new THREE.Mesh(angledSeam1, seamMaterial);
+  angledSeam1Mesh.rotation.x = Math.PI / 4;
+  basketball.add(angledSeam1Mesh);
+
+  // 4️⃣ Angled seam #2 (~-45°)
+  const angledSeam2 = new THREE.TorusGeometry(radius, 0.01, 16, 100);
+  const angledSeam2Mesh = new THREE.Mesh(angledSeam2, seamMaterial);
+  angledSeam2Mesh.rotation.x = -Math.PI / 4;
+  basketball.add(angledSeam2Mesh);
+}
+
+/////////***************************** */
 
 // Create all elements
 createBasketballCourt();
