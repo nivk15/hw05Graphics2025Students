@@ -615,6 +615,137 @@ function updateCameraStatus(isEnabled) {
   }
 }
 //////////////////////////////////////////
+// Initialize all bonus features - SIMPLIFIED VERSION
+// Bonus Feature 1: More detailed court markings (free throw lines, key areas)
+function addDetailedCourtMarkings(scene) {
+  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+  const yOffset = 0.11;
+  
+  // Free throw lines and key areas for both sides
+  addFreeThrowArea(scene, -12, lineMaterial, yOffset); // Left side
+  addFreeThrowArea(scene, 12, lineMaterial, yOffset);   // Right side
+}
+
+function addFreeThrowArea(scene, centerX, material, yOffset) {
+  // Determine which direction the hoop faces
+  const isRightSide = centerX > 0;
+  const freeThrowLineX = isRightSide ? centerX - 5.8 : centerX + 5.8; // Correct distance from hoop
+  const baselineX = isRightSide ? 14.5 : -14.5; // Baseline position
+  
+  // Free throw circle - centered ON the free throw line
+  const circlePoints = [];
+  const freeThrowRadius = 1.8; // Smaller radius like center circle
+  
+  // Create arc from -60° to +60° (120° total)
+  const startAngle = -Math.PI/3; // -60°
+  const endAngle = Math.PI/3;    // +60°
+  
+  for (let i = 0; i <= 24; i++) {
+    const t = i / 24;
+    const angle = startAngle + t * (endAngle - startAngle);
+    
+    const x = freeThrowLineX + Math.cos(angle) * freeThrowRadius;
+    const z = Math.sin(angle) * freeThrowRadius;
+    circlePoints.push(new THREE.Vector3(x, yOffset, z));
+  }
+  
+  const circleGeometry = new THREE.BufferGeometry().setFromPoints(circlePoints);
+  const freeThrowArc = new THREE.Line(circleGeometry, material);
+  scene.add(freeThrowArc);
+  
+  // Free throw line (vertical line)
+  const freeThrowLineGeometry = new THREE.BufferGeometry();
+  freeThrowLineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    freeThrowLineX, yOffset, -1.8,
+    freeThrowLineX, yOffset, 1.8,
+  ]), 3));
+  scene.add(new THREE.Line(freeThrowLineGeometry, material));
+  
+  // Key area (the lane) - narrower rectangle
+  const keyWidth = 1.8; // Narrower than before
+  const keyPoints = [
+    new THREE.Vector3(baselineX, yOffset, -keyWidth),      // Baseline bottom
+    new THREE.Vector3(freeThrowLineX, yOffset, -keyWidth), // Free throw line bottom
+    new THREE.Vector3(freeThrowLineX, yOffset, keyWidth),  // Free throw line top
+    new THREE.Vector3(baselineX, yOffset, keyWidth),       // Baseline top
+    new THREE.Vector3(baselineX, yOffset, -keyWidth)       // Close the rectangle
+  ];
+  const keyGeometry = new THREE.BufferGeometry().setFromPoints(keyPoints);
+  const keyLine = new THREE.Line(keyGeometry, material);
+  scene.add(keyLine);
+}
+
+// Bonus Feature 2: Multiple camera preset positions
+function addCameraPresets() {
+  let currentPreset = 0;
+  const presets = [
+    { position: [0, 15, 30], name: "Overview" },
+    { position: [25, 8, 0], name: "Sideline" },
+    { position: [0, 25, 0], name: "Top Down" },
+    { position: [-15, 5, 15], name: "Corner" },
+    { position: [0, 3, 20], name: "Court Level" }
+  ];
+  
+  // Add camera preset controls to UI
+  const presetControls = document.createElement('div');
+  presetControls.id = 'camera-presets';
+  presetControls.style.cssText = `
+    position: absolute;
+    top: 120px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    border: 1px solid #333;
+    z-index: 100;
+    backdrop-filter: blur(5px);
+  `;
+  presetControls.innerHTML = `
+    <div style="color: #ff6600; font-weight: bold; margin-bottom: 8px;">Camera Presets</div>
+    <div style="margin: 3px 0;">
+      <span style="background: #333; padding: 1px 6px; border-radius: 3px; font-family: monospace; color: #ff6600;">1-5</span>
+      <span style="margin-left: 8px;">Change View</span>
+    </div>
+    <div id="current-preset" style="margin-top: 5px; color: #00ff00; font-size: 11px;">
+      Current: Overview
+    </div>
+  `;
+  document.body.appendChild(presetControls);
+  
+  // Add keyboard listener for camera presets
+  document.addEventListener('keydown', (e) => {
+    const presetIndex = parseInt(e.key) - 1;
+    if (presetIndex >= 0 && presetIndex < presets.length) {
+      currentPreset = presetIndex;
+      const preset = presets[presetIndex];
+      
+      // Animate camera to new position
+      const startPos = camera.position.clone();
+      const endPos = new THREE.Vector3(...preset.position);
+      
+      let progress = 0;
+      const animateCamera = () => {
+        progress += 0.05;
+        if (progress <= 1) {
+          camera.position.lerpVectors(startPos, endPos, progress);
+          camera.lookAt(0, 0, 0);
+          requestAnimationFrame(animateCamera);
+        }
+      };
+      animateCamera();
+      
+      // Update UI
+      document.getElementById('current-preset').textContent = `Current: ${preset.name}`;
+    }
+  });
+}
+
+// Initialize bonus features
+
+////////////////////////
 
 // Create all elements
 createBasketballCourt();
@@ -628,8 +759,9 @@ addStaticBasketball(scene);
 
 createUIFramework();  
 
+// initializeBonusFeatures(scene)
 
-
+////////////////////////////
 
 // Set camera position for better view
 const cameraTranslate = new THREE.Matrix4();

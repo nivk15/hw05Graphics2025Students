@@ -12,8 +12,7 @@
 
 ## Group Members
 **MANDATORY: Add the full names of all group members here:**
-- [Member 1 Full Name]
-- [Member 2 Full Name]
+- Niv Kirshenbaum   ( ID: 315328336 )
 
 ## Technical Details
 - Run the server with: `node index.js`
