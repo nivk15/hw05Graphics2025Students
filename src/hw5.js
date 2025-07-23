@@ -713,31 +713,152 @@ function updateBasketballMovement(deltaTime) {
 }
 
 
+// function animate() {
+//     requestAnimationFrame(animate);
+    
+//     const deltaTime = clock.getDelta();
+    
+//     // Update basketball movement
+//     updateBasketballMovement(deltaTime);
+    
+//     // Update controls
+//     controls.enabled = isOrbitEnabled;
+//     controls.update();
+    
+//     renderer.render(scene, camera);
+// }
+
+
+// ---------------
+
+// PHASE 2: Shot Power System
+// Add these to your existing code
+
+// ========================================
+// 1. ADD GLOBAL VARIABLE (with your other globals)
+// ========================================
+let shotPower = 50; // Starting at 50% power
+
+// ========================================
+// 2. ADD SHOT POWER FUNCTION
+// ========================================
+function updateShotPower(deltaTime) {
+    const powerChangeRate = 60; // Power units per second
+    
+    if (keys['KeyW']) {
+        shotPower = Math.min(100, shotPower + powerChangeRate * deltaTime);
+    }
+    if (keys['KeyS']) {
+        shotPower = Math.max(0, shotPower - powerChangeRate * deltaTime);
+    }
+    
+    // Update the UI display
+    updatePowerDisplay();
+}
+
+// ========================================
+// 3. CREATE VISUAL POWER INDICATOR UI
+// ========================================
+function createPowerUI() {
+    // Power display container
+    const powerDisplay = document.createElement('div');
+    powerDisplay.id = 'power-display';
+    powerDisplay.style.cssText = `
+        position: fixed;
+        top: 120px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        border: 2px solid #ff6600;
+        z-index: 1000;
+        min-width: 200px;
+    `;
+    document.body.appendChild(powerDisplay);
+    
+    // Instructions for power controls
+    const powerInstructions = document.createElement('div');
+    powerInstructions.id = 'power-instructions';
+    powerInstructions.style.cssText = `
+        position: fixed;
+        bottom: 250px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        border: 1px solid #333;
+        z-index: 1000;
+    `;
+    powerInstructions.innerHTML = `
+        <div style="color: #ff6600; font-weight: bold; margin-bottom: 5px;">Shot Power Controls:</div>
+        <div><span style="background: #333; padding: 2px 6px; border-radius: 3px; color: #ff6600;">W</span> - Increase Power</div>
+        <div><span style="background: #333; padding: 2px 6px; border-radius: 3px; color: #ff6600;">S</span> - Decrease Power</div>
+    `;
+    document.body.appendChild(powerInstructions);
+}
+
+// ========================================
+// 4. UPDATE POWER DISPLAY FUNCTION
+// ========================================
+function updatePowerDisplay() {
+    const powerDisplay = document.getElementById('power-display');
+    if (powerDisplay) {
+        // Calculate power bar width (percentage)
+        const powerPercentage = (shotPower / 100) * 100;
+        
+        // Color changes based on power level
+        let powerColor = '#00ff00'; // Green for low power
+        if (shotPower > 33) powerColor = '#ffaa00'; // Orange for medium
+        if (shotPower > 66) powerColor = '#ff0000'; // Red for high power
+        
+        powerDisplay.innerHTML = `
+            <div style="color: #ff6600; font-weight: bold; margin-bottom: 10px; text-align: center;">SHOT POWER</div>
+            <div style="margin: 8px 0;">
+                <div style="background: #333; height: 20px; border-radius: 10px; overflow: hidden; border: 1px solid #555;">
+                    <div style="
+                        background: ${powerColor}; 
+                        height: 100%; 
+                        width: ${powerPercentage}%; 
+                        transition: all 0.1s ease;
+                        border-radius: 10px;
+                    "></div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 8px;">
+                <strong>${shotPower.toFixed(0)}%</strong>
+            </div>
+            <div style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">
+                W/S to adjust
+            </div>
+        `;
+    }
+}
+
+
+
 function animate() {
     requestAnimationFrame(animate);
     
     const deltaTime = clock.getDelta();
     
-    // Update basketball movement
     updateBasketballMovement(deltaTime);
+    updateShotPower(deltaTime);  // ADD THIS LINE
     
-    // Update controls
     controls.enabled = isOrbitEnabled;
     controls.update();
     
     renderer.render(scene, camera);
 }
 
-// // Animation function
-// function animate() {
-//   requestAnimationFrame(animate);
-  
-//   // Update controls
-//   controls.enabled = isOrbitEnabled;
-//   controls.update();
-  
-//   renderer.render(scene, camera);
-// }
+
+createPowerUI();
+updatePowerDisplay();
 
 
 animate();
