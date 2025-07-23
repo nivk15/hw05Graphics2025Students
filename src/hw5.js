@@ -1,5 +1,11 @@
 import {OrbitControls} from './OrbitControls.js'
 
+let basketball; 
+let ballPosition = { x: 0, y: 0.6, z: 0 };
+const keys = {};
+const clock = new THREE.Clock();
+
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -314,7 +320,10 @@ function addStaticBasketball(scene) {
     shininess: 30,
     specular: 0x222222
   });
-  const basketball = new THREE.Mesh(ballGeometry, ballMaterial);
+  // const basketball = new THREE.Mesh(ballGeometry, ballMaterial);
+  basketball = new THREE.Mesh(ballGeometry, ballMaterial); // Remove 'const'
+
+
   basketball.position.set(0, 0.6, 0);
   basketball.castShadow = true;
 
@@ -670,18 +679,66 @@ function handleKeyDown(e) {
   }
 }
 
-document.addEventListener('keydown', handleKeyDown);
+document.addEventListener('keydown', (event) => {
+    keys[event.code] = true;
+    
+    // Handle camera toggle (O key)
+    if (event.key.toLowerCase() === "o") {
+        isOrbitEnabled = !isOrbitEnabled;
+        updateCameraStatus(isOrbitEnabled);
+    }
+});
 
-// Animation function
-function animate() {
-  requestAnimationFrame(animate);
-  
-  // Update controls
-  controls.enabled = isOrbitEnabled;
-  controls.update();
-  
-  renderer.render(scene, camera);
+document.addEventListener('keyup', (event) => {
+    keys[event.code] = false;
+});
+
+
+function updateBasketballMovement(deltaTime) {
+    const moveSpeed = 8;
+    const movement = { x: 0, z: 0 };
+    
+    if (keys['ArrowLeft']) movement.z += moveSpeed * deltaTime;   // Move left
+    if (keys['ArrowRight']) movement.z -= moveSpeed * deltaTime;  // Move right
+    if (keys['ArrowUp']) movement.x -= moveSpeed * deltaTime;     // Move forward
+    if (keys['ArrowDown']) movement.x += moveSpeed * deltaTime;   // Move backward
+    
+    ballPosition.x += movement.x;
+    ballPosition.z += movement.z;
+    
+    basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+    
+    ballPosition.x = Math.max(-14, Math.min(14, ballPosition.x));
+    ballPosition.z = Math.max(-7, Math.min(7, ballPosition.z));
 }
+
+
+function animate() {
+    requestAnimationFrame(animate);
+    
+    const deltaTime = clock.getDelta();
+    
+    // Update basketball movement
+    updateBasketballMovement(deltaTime);
+    
+    // Update controls
+    controls.enabled = isOrbitEnabled;
+    controls.update();
+    
+    renderer.render(scene, camera);
+}
+
+// // Animation function
+// function animate() {
+//   requestAnimationFrame(animate);
+  
+//   // Update controls
+//   controls.enabled = isOrbitEnabled;
+//   controls.update();
+  
+//   renderer.render(scene, camera);
+// }
+
 
 animate();
 
