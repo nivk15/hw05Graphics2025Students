@@ -5,6 +5,9 @@ let ballPosition = { x: 0, y: 0.6, z: 0 };
 const keys = {};
 const clock = new THREE.Clock();
 
+let ballVelocity = { x: 0, y: 0, z: 0 };
+let isPhysicsActive = false;
+
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -386,7 +389,7 @@ function createUIFramework() {
     z-index: 100;
     backdrop-filter: blur(5px);
   `;
-  scoreDisplay.innerHTML = 'Basketball Court - HW05 Infrastructure';
+  scoreDisplay.innerHTML = 'Basketball Court - HW06 Infrastructure';
   document.body.appendChild(scoreDisplay);
   
   // Controls display container
@@ -672,12 +675,7 @@ let isOrbitEnabled = true;
 // `;
 
 
-function handleKeyDown(e) {
-  if (e.key.toLowerCase() === "o") {
-    isOrbitEnabled = !isOrbitEnabled;
-    updateCameraStatus(isOrbitEnabled);  // Update status display
-  }
-}
+
 
 document.addEventListener('keydown', (event) => {
     keys[event.code] = true;
@@ -687,30 +685,37 @@ document.addEventListener('keydown', (event) => {
         isOrbitEnabled = !isOrbitEnabled;
         updateCameraStatus(isOrbitEnabled);
     }
+    
+    // Handle shooting (Spacebar) - ADD THIS
+    if (event.code === 'Space') {
+        event.preventDefault(); // Prevent page scroll
+        shootBasketball();
+    }
 });
+
 
 document.addEventListener('keyup', (event) => {
     keys[event.code] = false;
 });
 
 
-function updateBasketballMovement(deltaTime) {
-    const moveSpeed = 8;
-    const movement = { x: 0, z: 0 };
+// function updateBasketballMovement(deltaTime) {
+//     const moveSpeed = 8;
+//     const movement = { x: 0, z: 0 };
     
-    if (keys['ArrowLeft']) movement.z += moveSpeed * deltaTime;   // Move left
-    if (keys['ArrowRight']) movement.z -= moveSpeed * deltaTime;  // Move right
-    if (keys['ArrowUp']) movement.x -= moveSpeed * deltaTime;     // Move forward
-    if (keys['ArrowDown']) movement.x += moveSpeed * deltaTime;   // Move backward
+//     if (keys['ArrowLeft']) movement.z += moveSpeed * deltaTime;   // Move left
+//     if (keys['ArrowRight']) movement.z -= moveSpeed * deltaTime;  // Move right
+//     if (keys['ArrowUp']) movement.x -= moveSpeed * deltaTime;     // Move forward
+//     if (keys['ArrowDown']) movement.x += moveSpeed * deltaTime;   // Move backward
     
-    ballPosition.x += movement.x;
-    ballPosition.z += movement.z;
+//     ballPosition.x += movement.x;
+//     ballPosition.z += movement.z;
     
-    basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+//     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
     
-    ballPosition.x = Math.max(-14, Math.min(14, ballPosition.x));
-    ballPosition.z = Math.max(-7, Math.min(7, ballPosition.z));
-}
+//     ballPosition.x = Math.max(-14, Math.min(14, ballPosition.x));
+//     ballPosition.z = Math.max(-7, Math.min(7, ballPosition.z));
+// }
 
 
 // function animate() {
@@ -739,22 +744,23 @@ function updateBasketballMovement(deltaTime) {
 // ========================================
 let shotPower = 50; // Starting at 50% power
 
+
 // ========================================
 // 2. ADD SHOT POWER FUNCTION
 // ========================================
-function updateShotPower(deltaTime) {
-    const powerChangeRate = 60; // Power units per second
+// function updateShotPower(deltaTime) {
+//     const powerChangeRate = 60; // Power units per second
     
-    if (keys['KeyW']) {
-        shotPower = Math.min(100, shotPower + powerChangeRate * deltaTime);
-    }
-    if (keys['KeyS']) {
-        shotPower = Math.max(0, shotPower - powerChangeRate * deltaTime);
-    }
+//     if (keys['KeyW']) {
+//         shotPower = Math.min(100, shotPower + powerChangeRate * deltaTime);
+//     }
+//     if (keys['KeyS']) {
+//         shotPower = Math.max(0, shotPower - powerChangeRate * deltaTime);
+//     }
     
-    // Update the UI display
-    updatePowerDisplay();
-}
+//     // Update the UI display
+//     updatePowerDisplay();
+// }
 
 // ========================================
 // 3. CREATE VISUAL POWER INDICATOR UI
@@ -842,13 +848,384 @@ function updatePowerDisplay() {
 
 
 
+// ========================================
+// 2. SHOOTING FUNCTION - Spacebar Implementation
+// ========================================
+function shootBasketball() {
+    if (isPhysicsActive) return; // Prevent shooting while ball is in flight
+    
+     // Reset spin direction for new shot - ADD THIS LINE
+    basketball.userData = { originalSpinDirection: null };
+
+    isPhysicsActive = true;
+    
+    // Your hoops are at x: ±13, z: 0, y: ~7.5 (rim height)
+    const hoop1 = { x: -13, y: 7.5, z: 0 }; // Left hoop
+    const hoop2 = { x: 13, y: 7.5, z: 0 };  // Right hoop
+    
+    // Find nearest hoop
+    const distToHoop1 = Math.sqrt(Math.pow(ballPosition.x - hoop1.x, 2) + Math.pow(ballPosition.z - hoop1.z, 2));
+    const distToHoop2 = Math.sqrt(Math.pow(ballPosition.x - hoop2.x, 2) + Math.pow(ballPosition.z - hoop2.z, 2));
+    
+    const targetHoop = distToHoop1 < distToHoop2 ? hoop1 : hoop2;
+    
+    // Calculate shot parameters
+    const shotStrength = (shotPower / 100) * 20; // Max velocity based on power
+    const dx = targetHoop.x - ballPosition.x;
+    const dz = targetHoop.z - ballPosition.z;
+    const dy = targetHoop.y - ballPosition.y;
+    const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+    
+    // Calculate launch angle for proper arc (45 degrees works well)
+    const launchAngle = Math.PI / 4; // 45 degrees in radians
+    
+    // Calculate initial velocity components
+    const vx = (dx / horizontalDistance) * shotStrength * Math.cos(launchAngle);
+    const vz = (dz / horizontalDistance) * shotStrength * Math.cos(launchAngle);
+    const vy = shotStrength * Math.sin(launchAngle);
+    
+    ballVelocity = { x: vx, y: vy, z: vz };
+    
+    // Show shooting message
+    showShootingMessage("Shot taken! Power: " + shotPower.toFixed(0) + "%");
+}
+
+
+// ========================================
+// 3. PHYSICS SIMULATION FUNCTION
+// ========================================
+// function updatePhysics(deltaTime) {
+//     if (!isPhysicsActive) return;
+    
+//     const gravity = 12; // Gravity acceleration (adjust for realistic feel)
+//     const groundLevel = 0.6; // Basketball radius (ground collision)
+    
+//     // Apply gravity to vertical velocity
+//     ballVelocity.y -= gravity * deltaTime;
+    
+//     // Update position based on velocity
+//     ballPosition.x += ballVelocity.x * deltaTime;
+//     ballPosition.y += ballVelocity.y * deltaTime;
+//     ballPosition.z += ballVelocity.z * deltaTime;
+    
+//     // Ground collision detection
+//     if (ballPosition.y <= groundLevel) {
+//         ballPosition.y = groundLevel;
+        
+//         // Bounce with energy loss
+//         ballVelocity.y = Math.abs(ballVelocity.y) * 0.6; // 60% energy retained
+//         ballVelocity.x *= 0.8; // Friction on horizontal movement
+//         ballVelocity.z *= 0.8;
+        
+//         // Stop physics if ball has very little energy
+//         if (Math.abs(ballVelocity.y) < 0.5 && 
+//             Math.abs(ballVelocity.x) < 0.5 && 
+//             Math.abs(ballVelocity.z) < 0.5) {
+            
+//             isPhysicsActive = false;
+//             ballVelocity = { x: 0, y: 0, z: 0 };
+//             showShootingMessage("Ball settled");
+//         }
+//     }
+    
+//     // Court boundary collision
+//     const courtBounds = { minX: -14, maxX: 14, minZ: -7, maxZ: 7 };
+    
+//     if (ballPosition.x <= courtBounds.minX || ballPosition.x >= courtBounds.maxX) {
+//         ballVelocity.x *= -0.6; // Reverse and reduce velocity
+//         ballPosition.x = Math.max(courtBounds.minX, Math.min(courtBounds.maxX, ballPosition.x));
+//     }
+//     if (ballPosition.z <= courtBounds.minZ || ballPosition.z >= courtBounds.maxZ) {
+//         ballVelocity.z *= -0.6; // Reverse and reduce velocity
+//         ballPosition.z = Math.max(courtBounds.minZ, Math.min(courtBounds.maxZ, ballPosition.z));
+//     }
+    
+//     // Apply position to basketball mesh
+//     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+    
+//     // Add realistic backspin rotation during flight
+//     // if (ballVelocity.x !== 0 || ballVelocity.z !== 0) {
+//     //     const horizontalSpeed = Math.sqrt(ballVelocity.x ** 2 + ballVelocity.z ** 2);
+        
+//     //     // Calculate rotation axis based on movement direction for proper backspin
+//     //     const rotationAxis = {
+//     //         x: -ballVelocity.z / horizontalSpeed, // Perpendicular to movement
+//     //         z: ballVelocity.x / horizontalSpeed   // Perpendicular to movement
+//     //     };
+        
+//     //     // Apply backspin (backward rotation relative to movement direction)
+//     //     const spinSpeed = horizontalSpeed * 2; // Adjust multiplier for spin intensity
+//     //     basketball.rotation.x += rotationAxis.x * spinSpeed * deltaTime;
+//     //     basketball.rotation.z += rotationAxis.z * spinSpeed * deltaTime;
+//     // }
+    
+//    // Add realistic backspin rotation during flight
+//     if (ballVelocity.x !== 0 || ballVelocity.z !== 0) {
+//         const horizontalSpeed = Math.sqrt(ballVelocity.x ** 2 + ballVelocity.z ** 2);
+        
+//         // Store initial spin direction when shot is first taken
+//         if (!basketball.userData.spinDirection) {
+//             basketball.userData.spinDirection = {
+//                 x: -ballVelocity.z / horizontalSpeed,
+//                 z: ballVelocity.x / horizontalSpeed
+//             };
+//         }
+        
+//         // Use the original spin direction (doesn't change after bounces)
+//         const spinSpeed = horizontalSpeed * 2;
+//         basketball.rotation.x += basketball.userData.spinDirection.x * spinSpeed * deltaTime;
+//         basketball.rotation.z += basketball.userData.spinDirection.z * spinSpeed * deltaTime;
+//     }
+// }
+
+
+
+// function updatePhysics(deltaTime) {
+//     if (!isPhysicsActive) return;
+    
+//     const gravity = 12; // Gravity acceleration (adjust for realistic feel)
+//     const groundLevel = 0.6; // Basketball radius (ground collision)
+    
+//     // Apply gravity to vertical velocity
+//     ballVelocity.y -= gravity * deltaTime;
+    
+//     // Update position based on velocity
+//     ballPosition.x += ballVelocity.x * deltaTime;
+//     ballPosition.y += ballVelocity.y * deltaTime;
+//     ballPosition.z += ballVelocity.z * deltaTime;
+    
+//     // Ground collision detection
+//     if (ballPosition.y <= groundLevel) {
+//         ballPosition.y = groundLevel;
+        
+//         // Bounce with energy loss
+//         ballVelocity.y = Math.abs(ballVelocity.y) * 0.6; // 60% energy retained
+//         ballVelocity.x *= 0.8; // Friction on horizontal movement
+//         ballVelocity.z *= 0.8;
+        
+//         // Stop physics if ball has very little energy
+//         if (Math.abs(ballVelocity.y) < 0.5 && 
+//             Math.abs(ballVelocity.x) < 0.5 && 
+//             Math.abs(ballVelocity.z) < 0.5) {
+            
+//             isPhysicsActive = false;
+//             ballVelocity = { x: 0, y: 0, z: 0 };
+//             showShootingMessage("Ball settled");
+//         }
+//     }
+    
+//     // Court boundary collision
+//     const courtBounds = { minX: -14, maxX: 14, minZ: -7, maxZ: 7 };
+    
+//     if (ballPosition.x <= courtBounds.minX || ballPosition.x >= courtBounds.maxX) {
+//         ballVelocity.x *= -0.6; // Reverse and reduce velocity
+//         ballPosition.x = Math.max(courtBounds.minX, Math.min(courtBounds.maxX, ballPosition.x));
+//     }
+//     if (ballPosition.z <= courtBounds.minZ || ballPosition.z >= courtBounds.maxZ) {
+//         ballVelocity.z *= -0.6; // Reverse and reduce velocity
+//         ballPosition.z = Math.max(courtBounds.minZ, Math.min(courtBounds.maxZ, ballPosition.z));
+//     }
+    
+//     // Apply position to basketball mesh
+//     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+    
+//         // Add simple backspin rotation during flight
+//     if (Math.abs(ballVelocity.x) > 0.1 || Math.abs(ballVelocity.z) > 0.1) {
+//         const horizontalSpeed = Math.sqrt(ballVelocity.x ** 2 + ballVelocity.z ** 2);
+        
+//         // Simple backspin - ball always rotates backward
+//         basketball.rotation.x += horizontalSpeed * deltaTime * 1.5;
+//         basketball.rotation.z += horizontalSpeed * deltaTime * 1.2;
+//     }
+// }
+
+function updatePhysics(deltaTime) {
+    if (!isPhysicsActive) return;
+    
+    const gravity = 12; // Gravity acceleration (adjust for realistic feel)
+    const groundLevel = 0.6; // Basketball radius (ground collision)
+    
+    // Apply gravity to vertical velocity
+    ballVelocity.y -= gravity * deltaTime;
+    
+    // Update position based on velocity
+    ballPosition.x += ballVelocity.x * deltaTime;
+    ballPosition.y += ballVelocity.y * deltaTime;
+    ballPosition.z += ballVelocity.z * deltaTime;
+    
+    // Ground collision detection
+    if (ballPosition.y <= groundLevel) {
+        ballPosition.y = groundLevel;
+        
+        // Bounce with energy loss
+        ballVelocity.y = Math.abs(ballVelocity.y) * 0.6; // 60% energy retained
+        ballVelocity.x *= 0.8; // Friction on horizontal movement
+        ballVelocity.z *= 0.8;
+        
+        // Stop physics if ball has very little energy
+        if (Math.abs(ballVelocity.y) < 0.5 && 
+            Math.abs(ballVelocity.x) < 0.5 && 
+            Math.abs(ballVelocity.z) < 0.5) {
+            
+            // isPhysicsActive = false;
+            // ballVelocity = { x: 0, y: 0, z: 0 };
+            // showShootingMessage("Ball settled");
+            
+            isPhysicsActive = false;
+            ballVelocity = { x: 0, y: 0, z: 0 };
+            // Clear spin data when ball settles - ADD THIS LINE
+            if (basketball.userData) {
+                basketball.userData.originalSpinDirection = null;
+            }
+            showShootingMessage("Ball settled");
+
+            
+        }
+    }
+    
+    // Court boundary collision
+    const courtBounds = { minX: -14, maxX: 14, minZ: -7, maxZ: 7 };
+    
+    if (ballPosition.x <= courtBounds.minX || ballPosition.x >= courtBounds.maxX) {
+        ballVelocity.x *= -0.6; // Reverse and reduce velocity
+        ballPosition.x = Math.max(courtBounds.minX, Math.min(courtBounds.maxX, ballPosition.x));
+    }
+    if (ballPosition.z <= courtBounds.minZ || ballPosition.z >= courtBounds.maxZ) {
+        ballVelocity.z *= -0.6; // Reverse and reduce velocity
+        ballPosition.z = Math.max(courtBounds.minZ, Math.min(courtBounds.maxZ, ballPosition.z));
+    }
+    
+    // Apply position to basketball mesh
+    basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+    
+
+    //   // Add realistic backspin rotation during flight
+    // if (Math.abs(ballVelocity.x) > 0.1 || Math.abs(ballVelocity.z) > 0.1) {
+    //     const horizontalSpeed = Math.sqrt(ballVelocity.x ** 2 + ballVelocity.z ** 2);
+        
+
+    //     basketball.rotation.x -= ballVelocity.z * deltaTime * 2;  // Opposite to Z movement
+    //     basketball.rotation.z += ballVelocity.x * deltaTime * 2;  // Opposite to X movement
+    // }
+    // Add realistic backspin rotation during flight with preserved direction
+    if (Math.abs(ballVelocity.x) > 0.1 || Math.abs(ballVelocity.z) > 0.1) {
+        const horizontalSpeed = Math.sqrt(ballVelocity.x ** 2 + ballVelocity.z ** 2);
+        
+        // Store the initial spin direction when ball is first shot
+        if (!basketball.userData || !basketball.userData.originalSpinDirection) {
+            basketball.userData = {
+                originalSpinDirection: {
+                    x: -ballVelocity.z * 2,
+                    z: ballVelocity.x * 2
+                }
+            };
+        }
+        
+        // Use the original spin direction, not current velocity direction
+        basketball.rotation.x += basketball.userData.originalSpinDirection.x * deltaTime;
+        basketball.rotation.z += basketball.userData.originalSpinDirection.z * deltaTime;
+    }
+}
+
+
+
+
+// ========================================
+// 4. SHOOTING MESSAGE SYSTEM
+// ========================================
+function createShootingMessageUI() {
+    // Create message display for shooting feedback
+    const messageDisplay = document.createElement('div');
+    messageDisplay.id = 'shooting-message';
+    messageDisplay.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        font-weight: bold;
+        z-index: 1000;
+        text-align: center;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+    document.body.appendChild(messageDisplay);
+}
+
+function showShootingMessage(text) {
+    const messageDisplay = document.getElementById('shooting-message');
+    if (messageDisplay) {
+        messageDisplay.textContent = text;
+        messageDisplay.style.opacity = '1';
+        
+        // Fade out after 2 seconds
+        setTimeout(() => {
+            messageDisplay.style.opacity = '0';
+        }, 2000);
+    }
+}
+
+
+// ========================================
+// 5. UPDATE MOVEMENT FUNCTION (prevent movement during physics)
+// ========================================
+// Modify your existing updateBasketballMovement function:
+function updateBasketballMovement(deltaTime) {
+    if (isPhysicsActive) return; // Don't allow manual movement during physics
+    
+    const moveSpeed = 8;
+    const movement = { x: 0, z: 0 };
+    
+    if (keys['ArrowLeft']) movement.z += moveSpeed * deltaTime;
+    if (keys['ArrowRight']) movement.z -= moveSpeed * deltaTime;
+    if (keys['ArrowUp']) movement.x -= moveSpeed * deltaTime;
+    if (keys['ArrowDown']) movement.x += moveSpeed * deltaTime;
+    
+    ballPosition.x += movement.x;
+    ballPosition.z += movement.z;
+    
+    basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+    
+    ballPosition.x = Math.max(-14, Math.min(14, ballPosition.x));
+    ballPosition.z = Math.max(-7, Math.min(7, ballPosition.z));
+}
+
+
+
+// ========================================
+// 6. UPDATE SHOT POWER FUNCTION (prevent adjustment during physics)
+// ========================================
+// Modify your existing updateShotPower function:
+function updateShotPower(deltaTime) {
+    if (isPhysicsActive) return; // Don't allow power adjustment during physics
+    
+    const powerChangeRate = 60;
+    
+    if (keys['KeyW']) {
+        shotPower = Math.min(100, shotPower + powerChangeRate * deltaTime);
+    }
+    if (keys['KeyS']) {
+        shotPower = Math.max(0, shotPower - powerChangeRate * deltaTime);
+    }
+    
+    updatePowerDisplay();
+}
+
+
+
+
 function animate() {
     requestAnimationFrame(animate);
     
     const deltaTime = clock.getDelta();
     
     updateBasketballMovement(deltaTime);
-    updateShotPower(deltaTime);  // ADD THIS LINE
+    updateShotPower(deltaTime);
+    updatePhysics(deltaTime); // ADD THIS LINE
     
     controls.enabled = isOrbitEnabled;
     controls.update();
