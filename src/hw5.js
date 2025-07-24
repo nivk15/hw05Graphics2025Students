@@ -723,6 +723,11 @@ document.addEventListener('keydown', (event) => {
         event.preventDefault(); // Prevent page scroll
         shootBasketball();
     }
+
+    // Handle reset (R key) - ADD THIS
+    if (event.key.toLowerCase() === "r") {
+        resetBasketball();
+    }
 });
 
 
@@ -892,14 +897,18 @@ function updateShotAttempts() {
     updateScoreDisplay();
 }
 
-function resetBasketballAfterScore() {
+
+function resetBasketball() {
     ballPosition = { x: 0, y: 0.6, z: 0 };
     ballVelocity = { x: 0, y: 0, z: 0 };
     shotPower = 50;
     isPhysicsActive = false;
+    hasScored = false;
     basketball.userData = {};
     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
     basketball.rotation.set(0, 0, 0);
+    showScoreMessage("Ball reset to center court", "info");
+    updatePowerDisplay();
     updateScoreDisplay();
 }
 
