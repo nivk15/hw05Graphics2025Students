@@ -378,7 +378,260 @@ function createBasketballSeams(basketball) {
 
 /////////***************************** */
 
-// Create UI Framework for future features
+// // Create UI Framework for future features
+// function createUIFramework() {
+//   // Score display container
+//   const scoreDisplay = document.createElement('div');
+//   scoreDisplay.id = 'score-display';
+//   scoreDisplay.style.cssText = `
+//     position: absolute;
+//     top: 20px;
+//     left: 50%;
+//     transform: translateX(-50%);
+//     background: rgba(0, 0, 0, 0.8);
+//     color: white;
+//     padding: 15px 30px;
+//     border-radius: 10px;
+//     font-size: 18px;
+//     font-weight: bold;
+//     font-family: Arial, sans-serif;
+//     border: 2px solid #ff6600;
+//     z-index: 100;
+//     backdrop-filter: blur(5px);
+//   `;
+//   scoreDisplay.innerHTML = 'Basketball Court - HW06 Infrastructure';
+//   document.body.appendChild(scoreDisplay);
+  
+//   // Controls display container
+//   const controlsDisplay = document.createElement('div');
+//   controlsDisplay.id = 'controls-display';
+//   controlsDisplay.style.cssText = `
+//     position: absolute;
+//     bottom: 80px;
+//     left: 20px;
+//     background: rgba(0, 0, 0, 0.8);
+//     color: white;
+//     padding: 15px;
+//     border-radius: 8px;
+//     font-size: 14px;
+//     font-family: Arial, sans-serif;
+//     border: 1px solid #333;
+//     max-width: 300px;
+//     z-index: 100;
+//     backdrop-filter: blur(5px);
+//   `;
+//   controlsDisplay.innerHTML = `
+//     <h3 style="margin: 0 0 10px 0; color: #ff6600; font-size: 16px;">Controls (HW05)</h3>
+//     <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+//       <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">O</span></span>
+//       <span>Toggle Camera Controls</span>
+//     </div>
+//   `;
+//   document.body.appendChild(controlsDisplay);
+  
+//   // Status display
+//   const statusDisplay = document.createElement('div');
+//   statusDisplay.id = 'status-display';
+//   statusDisplay.style.cssText = `
+//     position: absolute;
+//     top: 20px;
+//     right: 20px;
+//     background: rgba(0, 0, 0, 0.8);
+//     color: white;
+//     padding: 10px 15px;
+//     border-radius: 8px;
+//     font-size: 12px;
+//     font-family: Arial, sans-serif;
+//     border: 1px solid #333;
+//     z-index: 100;
+//     backdrop-filter: blur(5px);
+//   `;
+//   statusDisplay.innerHTML = `
+//     <div style="margin: 3px 0; display: flex; justify-content: space-between; min-width: 150px;">
+//       <span>Camera:</span>
+//       <span id="camera-status" style="color: #00ff00; font-weight: bold;">ON</span>
+//     </div>
+//     <div style="margin: 3px 0; display: flex; justify-content: space-between;">
+//       <span>Basketball:</span>
+//       <span style="color: #ff6600; font-weight: bold;">STATIC</span>
+//     </div>
+//     <div style="margin: 3px 0; display: flex; justify-content: space-between;">
+//       <span>Physics:</span>
+//       <span style="color: #888; font-weight: bold;">DISABLED</span>
+//     </div>
+//   `;
+//   document.body.appendChild(statusDisplay);
+  
+//   // Game info display (for future score and stats)
+//   const gameInfoDisplay = document.createElement('div');
+//   gameInfoDisplay.id = 'game-info';
+//   gameInfoDisplay.style.cssText = `
+//     position: absolute;
+//     top: 80px;
+//     left: 50%;
+//     transform: translateX(-50%);
+//     background: rgba(0, 0, 0, 0.7);
+//     color: white;
+//     padding: 10px 20px;
+//     border-radius: 8px;
+//     font-size: 14px;
+//     font-family: Arial, sans-serif;
+//     border: 1px solid #444;
+//     z-index: 100;
+//     backdrop-filter: blur(5px);
+//     display: none;
+//   `;
+//   gameInfoDisplay.innerHTML = `
+//     <div style="text-align: center;">
+//       <div style="color: #ff6600; font-weight: bold; margin-bottom: 5px;">GAME STATS</div>
+//       <div>Shots: <span id="shots-count">0</span></div>
+//       <div>Made: <span id="made-count">0</span></div>
+//       <div>Accuracy: <span id="accuracy">0%</span></div>
+//     </div>
+//   `;
+//   document.body.appendChild(gameInfoDisplay);
+// }
+
+
+//------------------------
+// // Create UI Framework for HW06 complete features
+// function createUIFramework() {
+//   // Score display container
+//   const scoreDisplay = document.createElement('div');
+//   scoreDisplay.id = 'score-display';
+//   scoreDisplay.style.cssText = `
+//     position: absolute;
+//     top: 20px;
+//     left: 50%;
+//     transform: translateX(-50%);
+//     background: rgba(0, 0, 0, 0.8);
+//     color: white;
+//     padding: 15px 30px;
+//     border-radius: 10px;
+//     font-size: 18px;
+//     font-weight: bold;
+//     font-family: Arial, sans-serif;
+//     border: 2px solid #ff6600;
+//     z-index: 100;
+//     backdrop-filter: blur(5px);
+//   `;
+//   scoreDisplay.innerHTML = 'Basketball Court - HW06 Interactive Game';
+//   document.body.appendChild(scoreDisplay);
+  
+//   // Controls display container - UPDATED
+//   const controlsDisplay = document.createElement('div');
+//   controlsDisplay.id = 'controls-display';
+//   controlsDisplay.style.cssText = `
+//     position: absolute;
+//     bottom: 80px;
+//     left: 20px;
+//     background: rgba(0, 0, 0, 0.8);
+//     color: white;
+//     padding: 15px;
+//     border-radius: 8px;
+//     font-size: 14px;
+//     font-family: Arial, sans-serif;
+//     border: 1px solid #333;
+//     max-width: 300px;
+//     z-index: 100;
+//     backdrop-filter: blur(5px);
+//   `;
+//   controlsDisplay.innerHTML = `
+//     <h3 style="margin: 0 0 10px 0; color: #ff6600; font-size: 16px;">Controls (HW06 Complete)</h3>
+//     <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+//       <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">Arrow Keys</span></span>
+//       <span>Move Basketball</span>
+//     </div>
+//     <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+//       <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">W/S</span></span>
+//       <span>Adjust Shot Power</span>
+//     </div>
+//     <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+//       <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">Spacebar</span></span>
+//       <span>Shoot Basketball</span>
+//     </div>
+//     <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+//       <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">R</span></span>
+//       <span>Reset Ball Position</span>
+//     </div>
+//     <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+//       <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">O</span></span>
+//       <span>Toggle Camera Controls</span>
+//     </div>
+//     <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #444; font-size: 12px; color: #00ff00; text-align: center;">
+//       <strong>✅ HW06 Complete!</strong><br>
+//       Interactive Basketball Game
+//     </div>
+//   `;
+//   document.body.appendChild(controlsDisplay);
+  
+//   // Status display - UPDATED
+//   const statusDisplay = document.createElement('div');
+//   statusDisplay.id = 'status-display';
+//   statusDisplay.style.cssText = `
+//     position: absolute;
+//     top: 20px;
+//     right: 20px;
+//     background: rgba(0, 0, 0, 0.8);
+//     color: white;
+//     padding: 10px 15px;
+//     border-radius: 8px;
+//     font-size: 12px;
+//     font-family: Arial, sans-serif;
+//     border: 1px solid #333;
+//     z-index: 100;
+//     backdrop-filter: blur(5px);
+//   `;
+//   statusDisplay.innerHTML = `
+//     <div style="margin: 3px 0; display: flex; justify-content: space-between; min-width: 150px;">
+//       <span>Camera:</span>
+//       <span id="camera-status" style="color: #00ff00; font-weight: bold;">ON</span>
+//     </div>
+//     <div style="margin: 3px 0; display: flex; justify-content: space-between;">
+//       <span>Basketball:</span>
+//       <span style="color: #00ff00; font-weight: bold;">INTERACTIVE</span>
+//     </div>
+//     <div style="margin: 3px 0; display: flex; justify-content: space-between;">
+//       <span>Physics:</span>
+//       <span style="color: #00ff00; font-weight: bold;">ENABLED</span>
+//     </div>
+//   `;
+//   document.body.appendChild(statusDisplay);
+  
+//   // Game info display (for future score and stats)
+//   const gameInfoDisplay = document.createElement('div');
+//   gameInfoDisplay.id = 'game-info';
+//   gameInfoDisplay.style.cssText = `
+//     position: absolute;
+//     top: 80px;
+//     left: 50%;
+//     transform: translateX(-50%);
+//     background: rgba(0, 0, 0, 0.7);
+//     color: white;
+//     padding: 10px 20px;
+//     border-radius: 8px;
+//     font-size: 14px;
+//     font-family: Arial, sans-serif;
+//     border: 1px solid #444;
+//     z-index: 100;
+//     backdrop-filter: blur(5px);
+//     display: none;
+//   `;
+//   gameInfoDisplay.innerHTML = `
+//     <div style="text-align: center;">
+//       <div style="color: #ff6600; font-weight: bold; margin-bottom: 5px;">GAME STATS</div>
+//       <div>Shots: <span id="shots-count">0</span></div>
+//       <div>Made: <span id="made-count">0</span></div>
+//       <div>Accuracy: <span id="accuracy">0%</span></div>
+//     </div>
+//   `;
+//   document.body.appendChild(gameInfoDisplay);
+// }
+
+
+// --------------------------------------------------------
+
+// Create UI Framework for HW06 complete features
 function createUIFramework() {
   // Score display container
   const scoreDisplay = document.createElement('div');
@@ -399,10 +652,10 @@ function createUIFramework() {
     z-index: 100;
     backdrop-filter: blur(5px);
   `;
-  scoreDisplay.innerHTML = 'Basketball Court - HW06 Infrastructure';
+  scoreDisplay.innerHTML = 'Basketball Court - HW06 Interactive Game';
   document.body.appendChild(scoreDisplay);
   
-  // Controls display container
+  // Controls display container - UPDATED
   const controlsDisplay = document.createElement('div');
   controlsDisplay.id = 'controls-display';
   controlsDisplay.style.cssText = `
@@ -421,22 +674,31 @@ function createUIFramework() {
     backdrop-filter: blur(5px);
   `;
   controlsDisplay.innerHTML = `
-    <h3 style="margin: 0 0 10px 0; color: #ff6600; font-size: 16px;">Controls (HW05)</h3>
+    <h3 style="margin: 0 0 10px 0; color: #ff6600; font-size: 16px;">Controls (HW06 Complete)</h3>
+    <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+      <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">Arrow Keys</span></span>
+      <span>Move Basketball</span>
+    </div>
+    <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+      <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">W/S</span></span>
+      <span>Adjust Shot Power</span>
+    </div>
+    <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+      <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">Spacebar</span></span>
+      <span>Shoot Basketball</span>
+    </div>
+    <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
+      <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">R</span></span>
+      <span>Reset Ball Position</span>
+    </div>
     <div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">
       <span><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #ff6600;">O</span></span>
       <span>Toggle Camera Controls</span>
     </div>
-    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #444; font-size: 12px; color: #888;">
-      <strong style="color: #ff6600;">Coming in HW06:</strong><br>
-      • Arrow Keys - Move basketball<br>
-      • W/S Keys - Shoot basketball<br>
-      • Spacebar - Jump/bounce<br>
-      • R Key - Reset position
-    </div>
   `;
   document.body.appendChild(controlsDisplay);
   
-  // Status display
+  // Status display - UPDATED
   const statusDisplay = document.createElement('div');
   statusDisplay.id = 'status-display';
   statusDisplay.style.cssText = `
@@ -460,11 +722,11 @@ function createUIFramework() {
     </div>
     <div style="margin: 3px 0; display: flex; justify-content: space-between;">
       <span>Basketball:</span>
-      <span style="color: #ff6600; font-weight: bold;">STATIC</span>
+      <span style="color: #00ff00; font-weight: bold;">INTERACTIVE</span>
     </div>
     <div style="margin: 3px 0; display: flex; justify-content: space-between;">
       <span>Physics:</span>
-      <span style="color: #888; font-weight: bold;">DISABLED</span>
+      <span style="color: #00ff00; font-weight: bold;">ENABLED</span>
     </div>
   `;
   document.body.appendChild(statusDisplay);
@@ -498,6 +760,14 @@ function createUIFramework() {
   `;
   document.body.appendChild(gameInfoDisplay);
 }
+
+
+
+
+//--------------------------------------------------------
+
+
+
 
 // Enhanced camera controls status update
 function updateCameraStatus(isEnabled) {
@@ -775,6 +1045,52 @@ let shotPower = 50; // Starting at 50% power
 // ========================================
 // 3. CREATE VISUAL POWER INDICATOR UI
 // ========================================
+// function createPowerUI() {
+//     // Power display container
+//     const powerDisplay = document.createElement('div');
+//     powerDisplay.id = 'power-display';
+//     powerDisplay.style.cssText = `
+//         position: fixed;
+//         top: 120px;
+//         left: 20px;
+//         background: rgba(0, 0, 0, 0.9);
+//         color: white;
+//         padding: 15px;
+//         border-radius: 8px;
+//         font-family: Arial, sans-serif;
+//         font-size: 14px;
+//         border: 2px solid #ff6600;
+//         z-index: 1000;
+//         min-width: 200px;
+//     `;
+//     document.body.appendChild(powerDisplay);
+    
+//     // Instructions for power controls
+//     const powerInstructions = document.createElement('div');
+//     powerInstructions.id = 'power-instructions';
+//     powerInstructions.style.cssText = `
+//         position: fixed;
+//         bottom: 250px;
+//         left: 20px;
+//         background: rgba(0, 0, 0, 0.8);
+//         color: white;
+//         padding: 10px;
+//         border-radius: 8px;
+//         font-family: Arial, sans-serif;
+//         font-size: 12px;
+//         border: 1px solid #333;
+//         z-index: 1000;
+//     `;
+//     powerInstructions.innerHTML = `
+//         <div style="color: #ff6600; font-weight: bold; margin-bottom: 5px;">Shot Power Controls:</div>
+//         <div><span style="background: #333; padding: 2px 6px; border-radius: 3px; color: #ff6600;">W</span> - Increase Power</div>
+//         <div><span style="background: #333; padding: 2px 6px; border-radius: 3px; color: #ff6600;">S</span> - Decrease Power</div>
+//     `;
+//     document.body.appendChild(powerInstructions);
+// }
+
+
+//-----------
 function createPowerUI() {
     // Power display container
     const powerDisplay = document.createElement('div');
@@ -795,28 +1111,7 @@ function createPowerUI() {
     `;
     document.body.appendChild(powerDisplay);
     
-    // Instructions for power controls
-    const powerInstructions = document.createElement('div');
-    powerInstructions.id = 'power-instructions';
-    powerInstructions.style.cssText = `
-        position: fixed;
-        bottom: 250px;
-        left: 20px;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 10px;
-        border-radius: 8px;
-        font-family: Arial, sans-serif;
-        font-size: 12px;
-        border: 1px solid #333;
-        z-index: 1000;
-    `;
-    powerInstructions.innerHTML = `
-        <div style="color: #ff6600; font-weight: bold; margin-bottom: 5px;">Shot Power Controls:</div>
-        <div><span style="background: #333; padding: 2px 6px; border-radius: 3px; color: #ff6600;">W</span> - Increase Power</div>
-        <div><span style="background: #333; padding: 2px 6px; border-radius: 3px; color: #ff6600;">S</span> - Decrease Power</div>
-    `;
-    document.body.appendChild(powerInstructions);
+    // Removed powerInstructions section - no longer needed since main controls panel shows W/S controls
 }
 
 // ========================================
