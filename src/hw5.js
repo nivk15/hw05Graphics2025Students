@@ -9,6 +9,14 @@ let ballVelocity = { x: 0, y: 0, z: 0 };
 let isPhysicsActive = false;
 
 
+let gameStats = {
+    score: 0,
+    shotAttempts: 0,
+    shotsMade: 0,
+    get accuracy() { return this.shotAttempts > 0 ? (this.shotsMade / this.shotAttempts * 100).toFixed(1) : 0; }
+};
+
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -851,17 +859,60 @@ function updatePowerDisplay() {
 // ========================================
 // 2. SHOOTING FUNCTION - Spacebar Implementation
 // ========================================
-function shootBasketball() {
-    if (isPhysicsActive) return; // Prevent shooting while ball is in flight
+// function shootBasketball() {
+//     if (isPhysicsActive) return; // Prevent shooting while ball is in flight
     
-     // Reset spin direction for new shot - ADD THIS LINE
-    basketball.userData = {};  // Complete reset
+//      // Reset spin direction for new shot - ADD THIS LINE
+//     basketball.userData = {};  // Complete reset
 
+//     updateShotAttempts(); // Track shot attempts
+
+//     isPhysicsActive = true;
+    
+//     // Your hoops are at x: ±13, z: 0, y: ~7.5 (rim height)
+//     const hoop1 = { x: -13, y: 7.5, z: 0 }; // Left hoop
+//     const hoop2 = { x: 13, y: 7.5, z: 0 };  // Right hoop
+    
+//     // Find nearest hoop
+//     const distToHoop1 = Math.sqrt(Math.pow(ballPosition.x - hoop1.x, 2) + Math.pow(ballPosition.z - hoop1.z, 2));
+//     const distToHoop2 = Math.sqrt(Math.pow(ballPosition.x - hoop2.x, 2) + Math.pow(ballPosition.z - hoop2.z, 2));
+    
+//     const targetHoop = distToHoop1 < distToHoop2 ? hoop1 : hoop2;
+    
+//     // Calculate shot parameters
+//     const shotStrength = (shotPower / 100) * 20; // Max velocity based on power
+//     const dx = targetHoop.x - ballPosition.x;
+//     const dz = targetHoop.z - ballPosition.z;
+//     const dy = targetHoop.y - ballPosition.y;
+//     const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+    
+//     // Calculate launch angle for proper arc (45 degrees works well)
+//     const launchAngle = Math.PI / 4; // 45 degrees in radians
+    
+//     // Calculate initial velocity components
+//     const vx = (dx / horizontalDistance) * shotStrength * Math.cos(launchAngle);
+//     const vz = (dz / horizontalDistance) * shotStrength * Math.cos(launchAngle);
+//     const vy = shotStrength * Math.sin(launchAngle);
+    
+//     ballVelocity = { x: vx, y: vy, z: vz };
+    
+//     // Show shooting message
+//     showShootingMessage("Shot taken! Power: " + shotPower.toFixed(0) + "%");
+// }
+
+
+//--------------------------------------
+function shootBasketball() {
+    if (isPhysicsActive) return;
+    
+    basketball.userData = {};
+    updateShotAttempts();
+    
     isPhysicsActive = true;
     
     // Your hoops are at x: ±13, z: 0, y: ~7.5 (rim height)
-    const hoop1 = { x: -13, y: 7.5, z: 0 }; // Left hoop
-    const hoop2 = { x: 13, y: 7.5, z: 0 };  // Right hoop
+    const hoop1 = { x: -13, y: 7.5, z: 0 };
+    const hoop2 = { x: 13, y: 7.5, z: 0 };
     
     // Find nearest hoop
     const distToHoop1 = Math.sqrt(Math.pow(ballPosition.x - hoop1.x, 2) + Math.pow(ballPosition.z - hoop1.z, 2));
@@ -869,27 +920,26 @@ function shootBasketball() {
     
     const targetHoop = distToHoop1 < distToHoop2 ? hoop1 : hoop2;
     
-    // Calculate shot parameters
-    const shotStrength = (shotPower / 100) * 20; // Max velocity based on power
+    // Simple working version with better arc
+    const shotStrength = (shotPower / 100) * 18; // Base strength
     const dx = targetHoop.x - ballPosition.x;
     const dz = targetHoop.z - ballPosition.z;
-    const dy = targetHoop.y - ballPosition.y;
     const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
     
-    // Calculate launch angle for proper arc (45 degrees works well)
-    const launchAngle = Math.PI / 4; // 45 degrees in radians
+    // Create higher arc (steeper angle)
+    const launchAngle = Math.PI / 2.5; // 60 degrees for higher arc
     
     // Calculate initial velocity components
     const vx = (dx / horizontalDistance) * shotStrength * Math.cos(launchAngle);
     const vz = (dz / horizontalDistance) * shotStrength * Math.cos(launchAngle);
-    const vy = shotStrength * Math.sin(launchAngle);
+    const vy = shotStrength * Math.sin(launchAngle); // Higher vertical component
     
     ballVelocity = { x: vx, y: vy, z: vz };
     
-    // Show shooting message
     showShootingMessage("Shot taken! Power: " + shotPower.toFixed(0) + "%");
 }
 
+//--------------------------------------
 
 // ========================================
 // 3. PHYSICS SIMULATION FUNCTION
@@ -1041,6 +1091,203 @@ function shootBasketball() {
 
 
 
+// ---------------------------------------------------------------
+
+// ========================================
+// 2. SCORE DETECTION LOGIC - Rim Collision Detection
+// ========================================
+function checkHoopCollision() {
+    // Your hoops are at x: ±13, y: 7.5, z: 0
+    const hoops = [
+        { x: -13, y: 7.5, z: 0, radius: 1.2 }, // Left hoop (adjusted rim radius)
+        { x: 13, y: 7.5, z: 0, radius: 1.2 }   // Right hoop (adjusted rim radius)
+    ];
+    
+    hoops.forEach((hoop, index) => {
+        const distanceToHoop = Math.sqrt(
+            Math.pow(ballPosition.x - hoop.x, 2) + 
+            Math.pow(ballPosition.z - hoop.z, 2)
+        );
+        
+        // Check if ball is passing through hoop area
+        if (distanceToHoop < hoop.radius && 
+            ballPosition.y > hoop.y - 1 && ballPosition.y < hoop.y + 0.5 &&
+            ballVelocity.y < 0) { // Ball must be moving downward (proper shot arc)
+            
+            // SCORE! 🏀
+            gameStats.shotsMade++;
+            gameStats.score += 2; // 2 points per basket
+            
+            showScoreMessage("🏀 SHOT MADE! +2 POINTS 🏀", "success");
+            updateScoreDisplay();
+            
+            // Optional: Stop physics and reset ball after scoring
+            setTimeout(() => {
+                resetBasketballAfterScore();
+            }, 2000);
+            
+            // Prevent multiple detections for same shot
+            ballVelocity.y = Math.abs(ballVelocity.y) * 0.3; // Reduce downward velocity
+        }
+    });
+}
+
+// ========================================
+// 3. STATISTICS TRACKING
+// ========================================
+function updateShotAttempts() {
+    gameStats.shotAttempts++;
+    updateScoreDisplay();
+}
+
+function resetBasketballAfterScore() {
+    ballPosition = { x: 0, y: 0.6, z: 0 };
+    ballVelocity = { x: 0, y: 0, z: 0 };
+    shotPower = 50;
+    isPhysicsActive = false;
+    basketball.userData = {};
+    basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+    basketball.rotation.set(0, 0, 0);
+    updateScoreDisplay();
+}
+
+// ========================================
+// 4. SCORE DISPLAY UI
+// ========================================
+function createScoreDisplayUI() {
+    // Main score display
+    const scoreDisplay = document.createElement('div');
+    scoreDisplay.id = 'score-display-main';
+    scoreDisplay.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        border: 3px solid #ff6600;
+        z-index: 1000;
+        min-width: 200px;
+        text-align: center;
+    `;
+    document.body.appendChild(scoreDisplay);
+    
+    // Detailed stats display
+    const statsDisplay = document.createElement('div');
+    statsDisplay.id = 'detailed-stats';
+    statsDisplay.style.cssText = `
+        position: fixed;
+        top: 140px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        border: 2px solid #333;
+        z-index: 1000;
+        min-width: 200px;
+    `;
+    document.body.appendChild(statsDisplay);
+}
+
+function updateScoreDisplay() {
+    // Update main score display
+    const scoreDisplay = document.getElementById('score-display-main');
+    if (scoreDisplay) {
+        scoreDisplay.innerHTML = `
+            <div style="color: #ff6600; font-weight: bold; font-size: 20px; margin-bottom: 10px;">
+                🏀 SCORE: ${gameStats.score}
+            </div>
+            <div style="font-size: 18px; color: #00ff00;">
+                ${gameStats.shotsMade}/${gameStats.shotAttempts} MADE
+            </div>
+        `;
+    }
+    
+    // Update detailed stats
+    const statsDisplay = document.getElementById('detailed-stats');
+    if (statsDisplay) {
+        const accuracyColor = gameStats.accuracy >= 50 ? '#00ff00' : gameStats.accuracy >= 30 ? '#ffaa00' : '#ff6666';
+        
+        statsDisplay.innerHTML = `
+            <div style="color: #ff6600; font-weight: bold; margin-bottom: 8px; text-align: center;">GAME STATISTICS</div>
+            <div style="margin: 5px 0;">Total Points: <span style="color: #00ff00; font-weight: bold;">${gameStats.score}</span></div>
+            <div style="margin: 5px 0;">Shots Made: <span style="color: #00ff00;">${gameStats.shotsMade}</span></div>
+            <div style="margin: 5px 0;">Shot Attempts: <span style="color: #fff;">${gameStats.shotAttempts}</span></div>
+            <div style="margin: 5px 0;">Accuracy: <span style="color: ${accuracyColor}; font-weight: bold;">${gameStats.accuracy}%</span></div>
+            <div style="margin: 5px 0;">Current Power: <span style="color: #ffaa00;">${shotPower.toFixed(0)}%</span></div>
+        `;
+    }
+}
+
+// ========================================
+// 5. VISUAL FEEDBACK FOR SHOTS
+// ========================================
+function createScoreMessageUI() {
+    // Score message display (for shot made/missed feedback)
+    const messageDisplay = document.createElement('div');
+    messageDisplay.id = 'score-message';
+    messageDisplay.style.cssText = `
+        position: fixed;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 32px;
+        font-weight: bold;
+        z-index: 1000;
+        text-align: center;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        max-width: 80vw;
+    `;
+    document.body.appendChild(messageDisplay);
+}
+
+function showScoreMessage(text, type = "info") {
+    const messageDisplay = document.getElementById('score-message');
+    if (messageDisplay) {
+        messageDisplay.textContent = text;
+        
+        // Different colors for different message types
+        if (type === "success") {
+            messageDisplay.style.color = '#00ff00';
+            messageDisplay.style.textShadow = '3px 3px 6px rgba(0,255,0,0.3)';
+        } else if (type === "miss") {
+            messageDisplay.style.color = '#ff6666';
+            messageDisplay.style.textShadow = '3px 3px 6px rgba(255,0,0,0.3)';
+        } else {
+            messageDisplay.style.color = 'white';
+            messageDisplay.style.textShadow = '3px 3px 6px rgba(0,0,0,0.8)';
+        }
+        
+        messageDisplay.style.opacity = '1';
+        
+        // Fade out after 3 seconds
+        setTimeout(() => {
+            messageDisplay.style.opacity = '0';
+        }, 3000);
+    }
+}
+
+// Function to show missed shot message
+function showMissedShotMessage() {
+    showScoreMessage("MISSED SHOT", "miss");
+}
+
+
+
+
+
+
 
 
 // ---------------------------------------------------------------
@@ -1118,6 +1365,8 @@ function updatePhysics(deltaTime) {
     }
     
 
+    // Check for scoring
+    checkHoopCollision();
 
     // Apply position to basketball mesh
     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
@@ -1288,6 +1537,11 @@ function animate() {
 
 createPowerUI();
 updatePowerDisplay();
+
+
+createScoreDisplayUI();
+createScoreMessageUI();
+updateScoreDisplay();
 
 
 animate();
