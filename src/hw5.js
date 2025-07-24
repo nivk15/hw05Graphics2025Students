@@ -1987,12 +1987,32 @@ function updatePhysics(deltaTime) {
         ballVelocity.z *= 0.8;
         
         // Stop physics if ball has very little energy
+        // if (Math.abs(ballVelocity.y) < 0.5 && 
+        //     Math.abs(ballVelocity.x) < 0.5 && 
+        //     Math.abs(ballVelocity.z) < 0.5) {
+            
+        //     isPhysicsActive = false;
+        //     ballVelocity = { x: 0, y: 0, z: 0 };
+        //     // Clear spin data when ball settles
+        //     if (basketball.userData) {
+        //         basketball.userData.originalSpinDirection = null;
+        //     }
+        //     showShootingMessage("Ball settled");
+        // }
+
+        // Stop physics if ball has very little energy
         if (Math.abs(ballVelocity.y) < 0.5 && 
             Math.abs(ballVelocity.x) < 0.5 && 
             Math.abs(ballVelocity.z) < 0.5) {
             
             isPhysicsActive = false;
             ballVelocity = { x: 0, y: 0, z: 0 };
+            
+            // Check if this was a missed shot (only if we haven't scored)
+            if (!hasScored && gameStats.shotAttempts > 0) {
+                showScoreMessage("MISSED SHOT", "miss");
+            }
+            
             // Clear spin data when ball settles
             if (basketball.userData) {
                 basketball.userData.originalSpinDirection = null;
