@@ -855,7 +855,7 @@ function shootBasketball() {
     if (isPhysicsActive) return; // Prevent shooting while ball is in flight
     
      // Reset spin direction for new shot - ADD THIS LINE
-    basketball.userData = { originalSpinDirection: null };
+    basketball.userData = {};  // Complete reset
 
     isPhysicsActive = true;
     
@@ -1039,6 +1039,14 @@ function shootBasketball() {
 //     }
 // }
 
+
+
+
+
+// ---------------------------------------------------------------
+
+
+
 function updatePhysics(deltaTime) {
     if (!isPhysicsActive) return;
     
@@ -1083,18 +1091,34 @@ function updatePhysics(deltaTime) {
         }
     }
     
-    // Court boundary collision
-    const courtBounds = { minX: -14, maxX: 14, minZ: -7, maxZ: 7 };
-    
+   
+    // const courtBounds = { minX: -14, maxX: 14, minZ: -7, maxZ: 7 };
+    const courtBounds = { minX: -12.5, maxX: 12.5, minZ: -7, maxZ: 7 };
+
+
     if (ballPosition.x <= courtBounds.minX || ballPosition.x >= courtBounds.maxX) {
         ballVelocity.x *= -0.6; // Reverse and reduce velocity
         ballPosition.x = Math.max(courtBounds.minX, Math.min(courtBounds.maxX, ballPosition.x));
+        
+        // Reduce spin speed after collision
+        if (basketball.userData && basketball.userData.originalSpinDirection) {
+            basketball.userData.originalSpinDirection.x *= 0.7; // 30% spin reduction
+            basketball.userData.originalSpinDirection.z *= 0.7;
+        }
     }
     if (ballPosition.z <= courtBounds.minZ || ballPosition.z >= courtBounds.maxZ) {
         ballVelocity.z *= -0.6; // Reverse and reduce velocity
         ballPosition.z = Math.max(courtBounds.minZ, Math.min(courtBounds.maxZ, ballPosition.z));
+        
+        // Reduce spin speed after collision
+        if (basketball.userData && basketball.userData.originalSpinDirection) {
+            basketball.userData.originalSpinDirection.x *= 0.6; // 30% spin reduction
+            basketball.userData.originalSpinDirection.z *= 0.6;
+        }
     }
     
+
+
     // Apply position to basketball mesh
     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
     
@@ -1113,18 +1137,20 @@ function updatePhysics(deltaTime) {
         
         // Store the initial spin direction when ball is first shot
         if (!basketball.userData || !basketball.userData.originalSpinDirection) {
-            basketball.userData = {
-                originalSpinDirection: {
-                    x: -ballVelocity.z * 2,
-                    z: ballVelocity.x * 2
-                }
-            };
-        }
+    basketball.userData = {
+        originalSpinDirection: {
+            x: -ballVelocity.z * 1.25,  // Reduced from 2 to 1
+            z: ballVelocity.x * 1.25    // Reduced from 2 to 1
+            }
+        };
+    }
         
         // Use the original spin direction, not current velocity direction
         basketball.rotation.x += basketball.userData.originalSpinDirection.x * deltaTime;
         basketball.rotation.z += basketball.userData.originalSpinDirection.z * deltaTime;
     }
+
+    
 }
 
 
@@ -1174,8 +1200,27 @@ function showShootingMessage(text) {
 // 5. UPDATE MOVEMENT FUNCTION (prevent movement during physics)
 // ========================================
 // Modify your existing updateBasketballMovement function:
+// function updateBasketballMovement(deltaTime) {
+//     if (isPhysicsActive) return; // Don't allow manual movement during physics
+    
+//     const moveSpeed = 8;
+//     const movement = { x: 0, z: 0 };
+    
+//     if (keys['ArrowLeft']) movement.z += moveSpeed * deltaTime;
+//     if (keys['ArrowRight']) movement.z -= moveSpeed * deltaTime;
+//     if (keys['ArrowUp']) movement.x -= moveSpeed * deltaTime;
+//     if (keys['ArrowDown']) movement.x += moveSpeed * deltaTime;
+    
+//     ballPosition.x += movement.x;
+//     ballPosition.z += movement.z;
+    
+//     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+    
+//     ballPosition.x = Math.max(-14, Math.min(14, ballPosition.x));
+//     ballPosition.z = Math.max(-7, Math.min(7, ballPosition.z));
+// }
 function updateBasketballMovement(deltaTime) {
-    if (isPhysicsActive) return; // Don't allow manual movement during physics
+    if (isPhysicsActive) return;
     
     const moveSpeed = 8;
     const movement = { x: 0, z: 0 };
@@ -1189,6 +1234,13 @@ function updateBasketballMovement(deltaTime) {
     ballPosition.z += movement.z;
     
     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+    
+    // ADDED ROTATION:
+    if (movement.x !== 0 || movement.z !== 0) {
+        const rotationSpeed = 9;
+        basketball.rotation.x += movement.z * rotationSpeed * deltaTime;
+        basketball.rotation.z -= movement.x * rotationSpeed * deltaTime;
+    }
     
     ballPosition.x = Math.max(-14, Math.min(14, ballPosition.x));
     ballPosition.z = Math.max(-7, Math.min(7, ballPosition.z));
