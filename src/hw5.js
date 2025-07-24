@@ -16,6 +16,8 @@ let gameStats = {
     get accuracy() { return this.shotAttempts > 0 ? (this.shotsMade / this.shotAttempts * 100).toFixed(1) : 0; }
 };
 
+let hasScored = false; // Prevent multiple score detections
+
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -906,6 +908,8 @@ function shootBasketball() {
     if (isPhysicsActive) return;
     
     basketball.userData = {};
+    hasScored = false; // Reset scoring flag for new shot
+
     updateShotAttempts();
     
     isPhysicsActive = true;
@@ -1096,11 +1100,82 @@ function shootBasketball() {
 // ========================================
 // 2. SCORE DETECTION LOGIC - Rim Collision Detection
 // ========================================
+// function checkHoopCollision() {
+//     // Your hoops are at x: ±13, y: 7.5, z: 0
+//     const hoops = [
+//         { x: -13, y: 7.5, z: 0, radius: 1.2 }, // Left hoop (adjusted rim radius)
+//         { x: 13, y: 7.5, z: 0, radius: 1.2 }   // Right hoop (adjusted rim radius)
+//     ];
+    
+//     hoops.forEach((hoop, index) => {
+//         const distanceToHoop = Math.sqrt(
+//             Math.pow(ballPosition.x - hoop.x, 2) + 
+//             Math.pow(ballPosition.z - hoop.z, 2)
+//         );
+        
+//         // Check if ball is passing through hoop area
+//         if (distanceToHoop < hoop.radius && 
+//             ballPosition.y > hoop.y - 1 && ballPosition.y < hoop.y + 0.5 &&
+//             ballVelocity.y < 0) { // Ball must be moving downward (proper shot arc)
+            
+//             // SCORE! 🏀
+//             gameStats.shotsMade++;
+//             gameStats.score += 2; // 2 points per basket
+            
+//             showScoreMessage("🏀 SHOT MADE! +2 POINTS 🏀", "success");
+//             updateScoreDisplay();
+            
+//             // Optional: Stop physics and reset ball after scoring
+//             setTimeout(() => {
+//                 resetBasketballAfterScore();
+//             }, 2000);
+            
+//             // Prevent multiple detections for same shot
+//             ballVelocity.y = Math.abs(ballVelocity.y) * 0.3; // Reduce downward velocity
+//         }
+//     });
+// }
+
+// function checkHoopCollision() {
+//     const hoops = [
+//         { x: -13, y: 7.5, z: 0, radius: 1.5 },
+//         { x: 13, y: 7.5, z: 0, radius: 1.5 }
+//     ];
+    
+//     hoops.forEach((hoop, index) => {
+//         const distanceToHoop = Math.sqrt(
+//             Math.pow(ballPosition.x - hoop.x, 2) + 
+//             Math.pow(ballPosition.z - hoop.z, 2)
+//         );
+        
+//         // Only score if ball is coming from above and moving downward
+//         if (distanceToHoop < hoop.radius && 
+//             ballPosition.y > hoop.y && ballPosition.y < hoop.y + 2 &&  // Must be above rim level
+//             ballVelocity.y < -1) { // Must be moving downward with decent speed
+            
+//             // SCORE! 🏀
+//             gameStats.shotsMade++;
+//             gameStats.score += 2;
+            
+//             showScoreMessage("🏀 SHOT MADE! +2 POINTS 🏀", "success");
+//             updateScoreDisplay();
+            
+//             // setTimeout(() => {
+//             //     resetBasketballAfterScore();
+//             // }, 2000);
+            
+//             // ballVelocity.y = Math.abs(ballVelocity.y) * 0.3;
+//         }
+//     });
+// }
+
+
 function checkHoopCollision() {
-    // Your hoops are at x: ±13, y: 7.5, z: 0
+    if (hasScored) return; // Don't check if already scored this shot
+    
     const hoops = [
-        { x: -13, y: 7.5, z: 0, radius: 1.2 }, // Left hoop (adjusted rim radius)
-        { x: 13, y: 7.5, z: 0, radius: 1.2 }   // Right hoop (adjusted rim radius)
+        { x: -13, y: 7.5, z: 0, radius: 0.8 },
+        { x: 13, y: 7.5, z: 0, radius: 0.8 }
     ];
     
     hoops.forEach((hoop, index) => {
@@ -1109,25 +1184,19 @@ function checkHoopCollision() {
             Math.pow(ballPosition.z - hoop.z, 2)
         );
         
-        // Check if ball is passing through hoop area
         if (distanceToHoop < hoop.radius && 
-            ballPosition.y > hoop.y - 1 && ballPosition.y < hoop.y + 0.5 &&
-            ballVelocity.y < 0) { // Ball must be moving downward (proper shot arc)
+            ballPosition.y > hoop.y && ballPosition.y < hoop.y + 0.3 &&
+            ballVelocity.y < -3 &&
+            Math.abs(ballPosition.x - hoop.x) < 0.8 && 
+            Math.abs(ballPosition.z - hoop.z) < 0.8) {
             
-            // SCORE! 🏀
+            // SCORE! 🏀 (only once per shot)
             gameStats.shotsMade++;
-            gameStats.score += 2; // 2 points per basket
+            gameStats.score += 2;
+            hasScored = true; // Mark as scored to prevent multiple detections
             
             showScoreMessage("🏀 SHOT MADE! +2 POINTS 🏀", "success");
             updateScoreDisplay();
-            
-            // Optional: Stop physics and reset ball after scoring
-            setTimeout(() => {
-                resetBasketballAfterScore();
-            }, 2000);
-            
-            // Prevent multiple detections for same shot
-            ballVelocity.y = Math.abs(ballVelocity.y) * 0.3; // Reduce downward velocity
         }
     });
 }
@@ -1294,6 +1363,311 @@ function showMissedShotMessage() {
 
 
 
+// function updatePhysics(deltaTime) {
+//     if (!isPhysicsActive) return;
+    
+//     const gravity = 12; // Gravity acceleration (adjust for realistic feel)
+//     const groundLevel = 0.6; // Basketball radius (ground collision)
+    
+//     // Apply gravity to vertical velocity
+//     ballVelocity.y -= gravity * deltaTime;
+    
+//     // Update position based on velocity
+//     ballPosition.x += ballVelocity.x * deltaTime;
+//     ballPosition.y += ballVelocity.y * deltaTime;
+//     ballPosition.z += ballVelocity.z * deltaTime;
+    
+//     // Ground collision detection
+//     if (ballPosition.y <= groundLevel) {
+//         ballPosition.y = groundLevel;
+        
+//         // Bounce with energy loss
+//         ballVelocity.y = Math.abs(ballVelocity.y) * 0.6; // 60% energy retained
+//         ballVelocity.x *= 0.8; // Friction on horizontal movement
+//         ballVelocity.z *= 0.8;
+        
+//         // Stop physics if ball has very little energy
+//         if (Math.abs(ballVelocity.y) < 0.5 && 
+//             Math.abs(ballVelocity.x) < 0.5 && 
+//             Math.abs(ballVelocity.z) < 0.5) {
+            
+//             // isPhysicsActive = false;
+//             // ballVelocity = { x: 0, y: 0, z: 0 };
+//             // showShootingMessage("Ball settled");
+            
+//             isPhysicsActive = false;
+//             ballVelocity = { x: 0, y: 0, z: 0 };
+//             // Clear spin data when ball settles - ADD THIS LINE
+//             if (basketball.userData) {
+//                 basketball.userData.originalSpinDirection = null;
+//             }
+//             showShootingMessage("Ball settled");
+
+            
+//         }
+//     }
+    
+   
+//     // const courtBounds = { minX: -14, maxX: 14, minZ: -7, maxZ: 7 };
+//     const courtBounds = { minX: -12.5, maxX: 12.5, minZ: -7, maxZ: 7 };
+
+
+//     if (ballPosition.x <= courtBounds.minX || ballPosition.x >= courtBounds.maxX) {
+//         ballVelocity.x *= -0.6; // Reverse and reduce velocity
+//         ballPosition.x = Math.max(courtBounds.minX, Math.min(courtBounds.maxX, ballPosition.x));
+        
+//         // Reduce spin speed after collision
+//         if (basketball.userData && basketball.userData.originalSpinDirection) {
+//             basketball.userData.originalSpinDirection.x *= 0.7; // 30% spin reduction
+//             basketball.userData.originalSpinDirection.z *= 0.7;
+//         }
+//     }
+//     if (ballPosition.z <= courtBounds.minZ || ballPosition.z >= courtBounds.maxZ) {
+//         ballVelocity.z *= -0.6; // Reverse and reduce velocity
+//         ballPosition.z = Math.max(courtBounds.minZ, Math.min(courtBounds.maxZ, ballPosition.z));
+        
+//         // Reduce spin speed after collision
+//         if (basketball.userData && basketball.userData.originalSpinDirection) {
+//             basketball.userData.originalSpinDirection.x *= 0.6; // 30% spin reduction
+//             basketball.userData.originalSpinDirection.z *= 0.6;
+//         }
+//     }
+    
+
+//     // Check for scoring
+//     checkHoopCollision();
+
+//     // Apply position to basketball mesh
+//     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+    
+
+    
+//     if (Math.abs(ballVelocity.x) > 0.1 || Math.abs(ballVelocity.z) > 0.1) {
+//         const horizontalSpeed = Math.sqrt(ballVelocity.x ** 2 + ballVelocity.z ** 2);
+        
+//         // Store the initial spin direction when ball is first shot
+//         if (!basketball.userData || !basketball.userData.originalSpinDirection) {
+//     basketball.userData = {
+//         originalSpinDirection: {
+//             x: -ballVelocity.z * 1.25,  // Reduced from 2 to 1
+//             z: ballVelocity.x * 1.25    // Reduced from 2 to 1
+//             }
+//         };
+//     }
+        
+//         // Use the original spin direction, not current velocity direction
+//         basketball.rotation.x += basketball.userData.originalSpinDirection.x * deltaTime;
+//         basketball.rotation.z += basketball.userData.originalSpinDirection.z * deltaTime;
+//     }
+
+    
+// }
+
+//-------------------------------
+
+// function updatePhysics(deltaTime) {
+//     if (!isPhysicsActive) return;
+    
+//     const gravity = 12; // Gravity acceleration (adjust for realistic feel)
+//     const groundLevel = 0.6; // Basketball radius (ground collision)
+    
+//     // Apply gravity to vertical velocity
+//     ballVelocity.y -= gravity * deltaTime;
+    
+//     // Update position based on velocity
+//     ballPosition.x += ballVelocity.x * deltaTime;
+//     ballPosition.y += ballVelocity.y * deltaTime;
+//     ballPosition.z += ballVelocity.z * deltaTime;
+    
+//     // Ground collision detection
+//     if (ballPosition.y <= groundLevel) {
+//         ballPosition.y = groundLevel;
+        
+//         // Bounce with energy loss
+//         ballVelocity.y = Math.abs(ballVelocity.y) * 0.6; // 60% energy retained
+//         ballVelocity.x *= 0.8; // Friction on horizontal movement
+//         ballVelocity.z *= 0.8;
+        
+//         // Stop physics if ball has very little energy
+//         if (Math.abs(ballVelocity.y) < 0.5 && 
+//             Math.abs(ballVelocity.x) < 0.5 && 
+//             Math.abs(ballVelocity.z) < 0.5) {
+            
+//             isPhysicsActive = false;
+//             ballVelocity = { x: 0, y: 0, z: 0 };
+//             // Clear spin data when ball settles
+//             if (basketball.userData) {
+//                 basketball.userData.originalSpinDirection = null;
+//             }
+//             showShootingMessage("Ball settled");
+//         }
+//     }
+    
+//     // Court boundary collision WITH HOOP EXCEPTIONS
+//     const courtBounds = { minX: -12.5, maxX: 12.5, minZ: -7, maxZ: 7 };
+
+//     // Check if ball is in a hoop area (don't apply X boundary collision)
+//     // Create exception zone ONLY in front of the backboard, at rim level
+//     const nearLeftHoop = (ballPosition.x < -12.5 && ballPosition.x > -13.5 && 
+//                         Math.abs(ballPosition.z) < 1.8 && ballPosition.y > 3);
+//     const nearRightHoop = (ballPosition.x > 12.5 && ballPosition.x < 13.5 && 
+//                           Math.abs(ballPosition.z) < 1.8 && ballPosition.y > 3);
+
+
+//     // Only apply X boundary collision if NOT near hoops
+//     if (!nearLeftHoop && !nearRightHoop) {
+//         if (ballPosition.x <= courtBounds.minX || ballPosition.x >= courtBounds.maxX) {
+//             ballVelocity.x *= -0.6; // Reverse and reduce velocity
+//             ballPosition.x = Math.max(courtBounds.minX, Math.min(courtBounds.maxX, ballPosition.x));
+            
+//             // Reduce spin speed after collision
+//             if (basketball.userData && basketball.userData.originalSpinDirection) {
+//                 basketball.userData.originalSpinDirection.x *= 0.7; // 30% spin reduction
+//                 basketball.userData.originalSpinDirection.z *= 0.7;
+//             }
+//         }
+//     }
+    
+//     // Z boundary collision (keep as is)
+//     if (ballPosition.z <= courtBounds.minZ || ballPosition.z >= courtBounds.maxZ) {
+//         ballVelocity.z *= -0.6; // Reverse and reduce velocity
+//         ballPosition.z = Math.max(courtBounds.minZ, Math.min(courtBounds.maxZ, ballPosition.z));
+        
+//         // Reduce spin speed after collision
+//         if (basketball.userData && basketball.userData.originalSpinDirection) {
+//             basketball.userData.originalSpinDirection.x *= 0.6; // 30% spin reduction
+//             basketball.userData.originalSpinDirection.z *= 0.6;
+//         }
+//     }
+
+//     // Check for scoring
+//     checkHoopCollision();
+
+//     // Apply position to basketball mesh
+//     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+
+//     // Rotation during flight
+//     if (Math.abs(ballVelocity.x) > 0.1 || Math.abs(ballVelocity.z) > 0.1) {
+//         const horizontalSpeed = Math.sqrt(ballVelocity.x ** 2 + ballVelocity.z ** 2);
+        
+//         // Store the initial spin direction when ball is first shot
+//         if (!basketball.userData || !basketball.userData.originalSpinDirection) {
+//             basketball.userData = {
+//                 originalSpinDirection: {
+//                     x: -ballVelocity.z * 1.25,
+//                     z: ballVelocity.x * 1.25
+//                 }
+//             };
+//         }
+        
+//         // Use the original spin direction, not current velocity direction
+//         basketball.rotation.x += basketball.userData.originalSpinDirection.x * deltaTime;
+//         basketball.rotation.z += basketball.userData.originalSpinDirection.z * deltaTime;
+//     }
+// }
+
+
+
+
+
+//-------------
+
+// function updatePhysics(deltaTime) {
+//     if (!isPhysicsActive) return;
+    
+//     const gravity = 12; // Gravity acceleration (adjust for realistic feel)
+//     const groundLevel = 0.6; // Basketball radius (ground collision)
+    
+//     // Apply gravity to vertical velocity
+//     ballVelocity.y -= gravity * deltaTime;
+    
+//     // Update position based on velocity
+//     ballPosition.x += ballVelocity.x * deltaTime;
+//     ballPosition.y += ballVelocity.y * deltaTime;
+//     ballPosition.z += ballVelocity.z * deltaTime;
+    
+//     // Ground collision detection
+//     if (ballPosition.y <= groundLevel) {
+//         ballPosition.y = groundLevel;
+        
+//         // Bounce with energy loss
+//         ballVelocity.y = Math.abs(ballVelocity.y) * 0.6; // 60% energy retained
+//         ballVelocity.x *= 0.8; // Friction on horizontal movement
+//         ballVelocity.z *= 0.8;
+        
+//         // Stop physics if ball has very little energy
+//         if (Math.abs(ballVelocity.y) < 0.5 && 
+//             Math.abs(ballVelocity.x) < 0.5 && 
+//             Math.abs(ballVelocity.z) < 0.5) {
+            
+//             isPhysicsActive = false;
+//             ballVelocity = { x: 0, y: 0, z: 0 };
+//             // Clear spin data when ball settles
+//             if (basketball.userData) {
+//                 basketball.userData.originalSpinDirection = null;
+//             }
+//             showShootingMessage("Ball settled");
+//         }
+//     }
+    
+//     // Court boundary collision - EXCLUDE HOOP AREAS COMPLETELY
+//     const courtBounds = { minX: -12.5, maxX: 12.5, minZ: -7, maxZ: 7 };
+
+//     // Only apply boundary collision if ball is NOT in hoop areas at all
+//     if (!(ballPosition.x < -11.5 && ballPosition.x > -14.5 && Math.abs(ballPosition.z) < 2) &&  // Not near left hoop
+//         !(ballPosition.x > 11.5 && ballPosition.x < 14.5 && Math.abs(ballPosition.z) < 2)) {      // Not near right hoop
+        
+//         if (ballPosition.x <= courtBounds.minX || ballPosition.x >= courtBounds.maxX) {
+//             ballVelocity.x *= -0.6;
+//             ballPosition.x = Math.max(courtBounds.minX, Math.min(courtBounds.maxX, ballPosition.x));
+            
+//             if (basketball.userData && basketball.userData.originalSpinDirection) {
+//                 basketball.userData.originalSpinDirection.x *= 0.7;
+//                 basketball.userData.originalSpinDirection.z *= 0.7;
+//             }
+//         }
+//     }
+    
+//     // Z boundary collision (keep as is)
+//     if (ballPosition.z <= courtBounds.minZ || ballPosition.z >= courtBounds.maxZ) {
+//         ballVelocity.z *= -0.6; // Reverse and reduce velocity
+//         ballPosition.z = Math.max(courtBounds.minZ, Math.min(courtBounds.maxZ, ballPosition.z));
+        
+//         // Reduce spin speed after collision
+//         if (basketball.userData && basketball.userData.originalSpinDirection) {
+//             basketball.userData.originalSpinDirection.x *= 0.6; // 30% spin reduction
+//             basketball.userData.originalSpinDirection.z *= 0.6;
+//         }
+//     }
+
+//     // Check for scoring
+//     checkHoopCollision();
+
+//     // Apply position to basketball mesh
+//     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
+
+//     // Rotation during flight
+//     if (Math.abs(ballVelocity.x) > 0.1 || Math.abs(ballVelocity.z) > 0.1) {
+//         const horizontalSpeed = Math.sqrt(ballVelocity.x ** 2 + ballVelocity.z ** 2);
+        
+//         // Store the initial spin direction when ball is first shot
+//         if (!basketball.userData || !basketball.userData.originalSpinDirection) {
+//             basketball.userData = {
+//                 originalSpinDirection: {
+//                     x: -ballVelocity.z * 1.25,
+//                     z: ballVelocity.x * 1.25
+//                 }
+//             };
+//         }
+        
+//         // Use the original spin direction, not current velocity direction
+//         basketball.rotation.x += basketball.userData.originalSpinDirection.x * deltaTime;
+//         basketball.rotation.z += basketball.userData.originalSpinDirection.z * deltaTime;
+//     }
+// }
+
+
+//--
 function updatePhysics(deltaTime) {
     if (!isPhysicsActive) return;
     
@@ -1322,37 +1696,44 @@ function updatePhysics(deltaTime) {
             Math.abs(ballVelocity.x) < 0.5 && 
             Math.abs(ballVelocity.z) < 0.5) {
             
-            // isPhysicsActive = false;
-            // ballVelocity = { x: 0, y: 0, z: 0 };
-            // showShootingMessage("Ball settled");
-            
             isPhysicsActive = false;
             ballVelocity = { x: 0, y: 0, z: 0 };
-            // Clear spin data when ball settles - ADD THIS LINE
+            // Clear spin data when ball settles
             if (basketball.userData) {
                 basketball.userData.originalSpinDirection = null;
             }
             showShootingMessage("Ball settled");
-
-            
         }
     }
     
-   
-    // const courtBounds = { minX: -14, maxX: 14, minZ: -7, maxZ: 7 };
+    // Court boundary collision - PRECISE HOOP ZONES
     const courtBounds = { minX: -12.5, maxX: 12.5, minZ: -7, maxZ: 7 };
 
+    // Define VERY SMALL zones only for the rim area (not backboard)
+    const inLeftRimZone = (ballPosition.x < -12.4 && ballPosition.x > -13.6 && 
+                          Math.abs(ballPosition.z) < 1.2 && 
+                          ballPosition.y > 6.5 && ballPosition.y < 8.5 &&
+                          ballVelocity.y < 0); // Must be moving downward
 
-    if (ballPosition.x <= courtBounds.minX || ballPosition.x >= courtBounds.maxX) {
-        ballVelocity.x *= -0.6; // Reverse and reduce velocity
-        ballPosition.x = Math.max(courtBounds.minX, Math.min(courtBounds.maxX, ballPosition.x));
-        
-        // Reduce spin speed after collision
-        if (basketball.userData && basketball.userData.originalSpinDirection) {
-            basketball.userData.originalSpinDirection.x *= 0.7; // 30% spin reduction
-            basketball.userData.originalSpinDirection.z *= 0.7;
+    const inRightRimZone = (ballPosition.x > 12.4 && ballPosition.x < 13.6 && 
+                           Math.abs(ballPosition.z) < 1.2 && 
+                           ballPosition.y > 6.5 && ballPosition.y < 8.5 &&
+                           ballVelocity.y < 0); // Must be moving downward
+
+    // Only skip collision if ball is legitimately going through rim
+    if (!inLeftRimZone && !inRightRimZone) {
+        if (ballPosition.x <= courtBounds.minX || ballPosition.x >= courtBounds.maxX) {
+            ballVelocity.x *= -0.6;
+            ballPosition.x = Math.max(courtBounds.minX, Math.min(courtBounds.maxX, ballPosition.x));
+            
+            if (basketball.userData && basketball.userData.originalSpinDirection) {
+                basketball.userData.originalSpinDirection.x *= 0.7;
+                basketball.userData.originalSpinDirection.z *= 0.7;
+            }
         }
     }
+    
+    // Z boundary collision (keep as is)
     if (ballPosition.z <= courtBounds.minZ || ballPosition.z >= courtBounds.maxZ) {
         ballVelocity.z *= -0.6; // Reverse and reduce velocity
         ballPosition.z = Math.max(courtBounds.minZ, Math.min(courtBounds.maxZ, ballPosition.z));
@@ -1363,47 +1744,32 @@ function updatePhysics(deltaTime) {
             basketball.userData.originalSpinDirection.z *= 0.6;
         }
     }
-    
 
     // Check for scoring
     checkHoopCollision();
 
     // Apply position to basketball mesh
     basketball.position.set(ballPosition.x, ballPosition.y, ballPosition.z);
-    
 
-    //   // Add realistic backspin rotation during flight
-    // if (Math.abs(ballVelocity.x) > 0.1 || Math.abs(ballVelocity.z) > 0.1) {
-    //     const horizontalSpeed = Math.sqrt(ballVelocity.x ** 2 + ballVelocity.z ** 2);
-        
-
-    //     basketball.rotation.x -= ballVelocity.z * deltaTime * 2;  // Opposite to Z movement
-    //     basketball.rotation.z += ballVelocity.x * deltaTime * 2;  // Opposite to X movement
-    // }
-    // Add realistic backspin rotation during flight with preserved direction
+    // Rotation during flight
     if (Math.abs(ballVelocity.x) > 0.1 || Math.abs(ballVelocity.z) > 0.1) {
         const horizontalSpeed = Math.sqrt(ballVelocity.x ** 2 + ballVelocity.z ** 2);
         
         // Store the initial spin direction when ball is first shot
         if (!basketball.userData || !basketball.userData.originalSpinDirection) {
-    basketball.userData = {
-        originalSpinDirection: {
-            x: -ballVelocity.z * 1.25,  // Reduced from 2 to 1
-            z: ballVelocity.x * 1.25    // Reduced from 2 to 1
-            }
-        };
-    }
+            basketball.userData = {
+                originalSpinDirection: {
+                    x: -ballVelocity.z * 1.25,
+                    z: ballVelocity.x * 1.25
+                }
+            };
+        }
         
         // Use the original spin direction, not current velocity direction
         basketball.rotation.x += basketball.userData.originalSpinDirection.x * deltaTime;
         basketball.rotation.z += basketball.userData.originalSpinDirection.z * deltaTime;
     }
-
-    
 }
-
-
-
 
 // ========================================
 // 4. SHOOTING MESSAGE SYSTEM
